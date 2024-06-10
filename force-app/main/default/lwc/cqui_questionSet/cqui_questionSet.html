@@ -1,0 +1,56 @@
+<template>
+    <lightning-card title="Question List" icon-name="standard:code_set">
+        <div class="slds-m-around_large slds-grid slds-wrap">
+            <!-- status dropdown-->
+            <div class="slds-col slds-size_2-of-3 ">
+                <lightning-combobox
+                    name="sets"
+                    label="Please Select a Set"
+                    value={setName}
+                    placeholder="Select a Set"
+                    options={options}
+                    onchange={handleSetNameChange}
+                    required>
+                </lightning-combobox>
+            </div>
+            <!--create question set button--> 
+            <div class="slds-col slds-size_1-of-3 slds-text-align_right ">
+                <lightning-button if:true={selectedQuestions.length}
+                    variant="success" 
+                    label="Create Question Set" 
+                    icon-name="action:follow" 
+                    class="slds-m-left_x-small">
+                </lightning-button>
+                <lightning-button if:false={selectedQuestions.length} variant="success" icon-name="action:follow"  label="Create Question Set" disabled class="slds-m-left_x-small"></lightning-button>
+            </div>
+        </div>
+        <!-- table displaying question-->
+        <div class="slds-m-around_medium">
+            <template if:true={questions.length}>
+                <lightning-datatable
+                    data={questions}
+                    columns={columns}
+                    onsave={handleCheckboxChange}
+                    key-field="id">
+                </lightning-datatable>
+            </template>
+            <!--pagination-->
+            <template if:true={questions.length}>
+                <div class="slds-m-around_medium pagination-controls slds-text-align_center">
+                    <lightning-button label="Previous" data-direction="previous" onclick={handlePageChange} disabled={isPreviousDisabled}></lightning-button>
+                    <span class="slds-m-horizontal_medium">Page {page} of {totalPages}</span>
+                    <lightning-button label="Next" data-direction="next" onclick={handlePageChange} disabled={isNextDisabled}></lightning-button>
+                </div>
+            </template>
+            <!--displays only columns title if no questions available-->
+            <template if:false={questions.length}>
+                <lightning-datatable
+                    columns={columns}
+                    key-field="id">
+                </lightning-datatable>
+                <p>Question not available</p>
+            </template>
+            
+        </div>
+    </lightning-card>
+</template>
