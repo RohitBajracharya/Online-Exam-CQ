@@ -1,108 +1,117 @@
-import { LightningElement } from 'lwc';
+import createQuestionSet from '@salesforce/apex/SQX_questionSetController.createQuestionSet';
+import getQuestions from '@salesforce/apex/SQX_questionSetController.getQuestions';
+import getSetPicklistValues from '@salesforce/apex/SQX_questionSetController.getSetPicklistValues';
+import ANSWER_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Answer__c';
+import OPTIONS_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Options__c';
+import TITLE_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Title__c';
+import TYPE_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Type__c';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { LightningElement, wire } from 'lwc';
 
 const COLUMNS = [
-    { label: 'Title', fieldName: 'title' },
-    { label: 'Type', fieldName: 'type' },
-    { label: 'Answer', fieldName: 'answer' },
-    { label: 'Options', fieldName: 'options' },
+    { label: 'Title', fieldName: TITLE_FIELD.fieldApiName },
+    { label: 'Type', fieldName: TYPE_FIELD.fieldApiName },
+    { label: 'Answer', fieldName: ANSWER_FIELD.fieldApiName },
+    { label: 'Options', fieldName: OPTIONS_FIELD.fieldApiName },
 ];
 
-const QUESTIONS = [
-    { id: '1', title: 'What is your favorite feature in Salesforce?', type: 'free-end' },
-    { id: '2', title: 'Describe your experience with Salesforce Lightning.', type: 'free-end' },
-    { id: '3', title: 'How do you handle data migration in Salesforce?', type: 'free-end' },
-    { id: '4', title: 'What is your approach to building custom applications on the Salesforce platform?', type: 'free-end' },
-    { id: '5', title: 'How do you manage security and access control in Salesforce?', type: 'free-end' },
-    { id: '6', title: 'Explain your experience with Salesforce integrations.', type: 'free-end' },
-    { id: '7', title: 'What are your thoughts on Salesforce certifications?', type: 'free-end' },
-    { id: '8', title: 'How do you troubleshoot and debug issues in Salesforce?', type: 'free-end' },
-    { id: '9', title: 'Describe your understanding of Salesforce automation tools like Process Builder and Flow.', type: 'free-end' },
-    { id: '10', title: 'What are the benefits of using Salesforce as a CRM platform?', type: 'free-end' },
-    { id: '11', title: 'How do you stay updated with the latest Salesforce releases and features?', type: 'free-end' },
-    { id: '12', title: 'Share an example of a successful Salesforce implementation project you have worked on.', type: 'free-end' },
-    { id: '13', title: 'What challenges have you faced while working with Salesforce, and how did you overcome them?', type: 'free-end' },
-    { id: '14', title: 'Describe your experience with Salesforce Communities and how you leverage them for collaboration.', type: 'free-end' },
-    { id: '15', title: 'How do you ensure data quality and cleanliness in Salesforce?', type: 'free-end' },
-    { id: '16', title: 'Explain your experience with Salesforce DX and source-driven development.', type: 'free-end' },
-    { id: '17', title: 'What is your strategy for user adoption and training when implementing Salesforce?', type: 'free-end' },
-    { id: '18', title: 'How do you approach Salesforce governance and best practices?', type: 'free-end' },
-    { id: '19', title: 'What are the key metrics you track in Salesforce to measure business performance?', type: 'free-end' },
-    { id: '20', title: 'Describe your experience with Salesforce Lightning Web Components (LWC) and Aura components.', type: 'free-end' },
-    { id: '21', title: 'How do you handle large volumes of data in Salesforce, and what techniques do you use for performance optimization?', type: 'free-end' },
-    { id: '22', title: 'What is the capital of France?', type: 'singlechoice', options: ['Paris', 'Berlin', 'London', 'Rome'] },
-    { id: '23', title: 'Which of the following is a programming language?', type: 'multichoice', options: ['HTML', 'CSS', 'JavaScript', 'Photoshop'] }
-];
-
-const SET_NAME = [{ label: 'A', value: 'A' }, { label: 'B', value: 'B' }];
+// removes html tags, convert &quot into double quotation   
+function cleanQuestionString(question) {
+    const tempElement = document.createElement('div');
+    tempElement.innerHTML = question;
+    let cleanText = tempElement.textContent || tempElement.innerText || '';
+    cleanText = cleanText.replace(/&quot;/g, '"');
+    return cleanText;
+}
 
 export default class CquiQuestionSet extends LightningElement {
-    questions = QUESTIONS;
     displayedQuestions = [];
-    selectedQuestions = [];
+    allSelectedQuestionIds = [];
+    setPicklistValues = [];
+    questions = [];
+    selectedQuestionsByPage = {};
     setName = '';
     page = 1;
     questionPerPage = 7;
     totalPages = 1;
     columns = COLUMNS;
-    errorMessage = '';
+    error;
 
-    selectedQuestionsByPage = {};
-
-    connectedCallback() {
-        this.totalPages = Math.ceil(this.questions.length / this.questionPerPage);
-        this.updateDisplayedQuestions();
-        this.initializeSelectedQuestions();
-    }
-
-    //// updates the list of questions currently displayed on the page
-    updateDisplayedQuestions() {
-        const start = (this.page - 1) * this.questionPerPage;
-        const end = this.page * this.questionPerPage;
-        this.displayedQuestions = this.questions.slice(start, end);
-    }
-
-    //// tracks which questions are selected on each page.
-    initializeSelectedQuestions() {
-        for (let i = 1; i <= this.totalPages; i++) {
-            this.selectedQuestionsByPage[i] = [];
+    // retrieves questions record by calling method from controller and stores in questions array after cleaning the title, calculates totalPages and updates the questions that needs to be displayed in every page
+    @wire(getQuestions)
+    wiredQuestions({ error, data }) {
+        if (data) {
+            this.questions = data.map(record => {
+                console.log("Record::::", JSON.stringify(record));
+                return {
+                    Id: record.Id,
+                    SQX_Title__c: cleanQuestionString(record.SQX_Title__c),
+                    SQX_Type__c: record.SQX_Type__c,
+                    SQX_Options__c: record.SQX_Options__c,
+                    SQX_Answer__c: record.SQX_Answer__c
+                };
+            });
+            if (this.questions.length < 7) {
+                this.questionPerPage = this.questions.length;
+            }
+            this.totalPages = Math.ceil(this.questions.length / this.questionPerPage);
+            this.updateDisplayedQuestions();
+        } else if (error) {
+            console.error('Error:', error);
         }
     }
 
-    //// triggers when row is selected
-    handleRowSelection(event) {
-        const selectedRows = event.detail.selectedRows;
-        const currentPageSelectedQuestions = this.selectedQuestionsByPage[this.page];
-
-        // console.log("selectedRows::: ", JSON.stringify(selectedRows));
-        // console.log("currentPageSelectedQuestions:::: ", JSON.stringify(currentPageSelectedQuestions));
-        currentPageSelectedQuestions.length = 0;
-
-        //// Add the selected question IDs to the array
-        selectedRows.forEach(row => {
-            if (row.id) {
-                currentPageSelectedQuestions.push(row.id);
-            }
-        });
-
-        // Update the main selectedQuestions array with the current page's selected questions
-        this.selectedQuestions = [...currentPageSelectedQuestions];
-
+    // retrieves picklist value by calling method from controller and stores in setPicklistValuse array
+    @wire(getSetPicklistValues)
+    wiredSetPicklistValues({ error, data }) {
+        if (data) {
+            this.setPicklistValues = data.map(value => ({ label: value, value: value }));
+            this.error = undefined;
+        } else if (error) {
+            this.error = error;
+            this.setPicklistValues = [];
+        }
     }
 
-    //// triggers when create question btn is clicked
-    handleCreateQuestionSet(event) {
+    // method that decides which questions are needed to be displayed on each pages of the table
+    updateDisplayedQuestions() {
+        const startIndex = (this.page - 1) * this.questionPerPage;
+        const endIndex = startIndex + this.questionPerPage;
+        this.displayedQuestions = this.questions.slice(startIndex, endIndex);
+    }
+
+    // method that saves selected Question Ids and maintained this record across all pages of table
+    handleRowSelection(event) {
+        const selectedRows = event.detail.selectedRows;
+        const selectedIds = selectedRows.map(row => row.Id);
+        this.selectedQuestionsByPage[this.page] = selectedIds;
+        const allSelectedIds = Object.keys(this.selectedQuestionsByPage).reduce((acc, page) => {
+            return acc.concat(this.selectedQuestionsByPage[page]);
+        }, []);
+        this.allSelectedQuestionIds = [...new Set(allSelectedIds)];
+    }
+
+    //method that validates if setName is selected or not, then inserts selected QuestionIds in SQX_Question_Set__c object and show corresponding success or error toast.
+    async handleCreateQuestionSet(event) {
         if (!this.validateSetName()) {
             return;
         }
-        let selectedQuestions = [];
-        // Iterate through selected questions on each page and concatenate them
-        Object.values(this.selectedQuestionsByPage).forEach(selectedQuestionsPage => {
-            selectedQuestions = selectedQuestions.concat(selectedQuestionsPage);
-        });
-        alert("Selected Questions: " + selectedQuestions.join(', ') + " set :: " + this.setName);
+
+        try {
+            await createQuestionSet({
+                setName: this.setName,
+                questionIds: this.allSelectedQuestionIds
+            });
+            this.showToast('Success', 'Question Set Creation successful', 'success');
+            this.resetState();
+        } catch (error) {
+            const errorMessage = error.body.message;
+            const customErrorMessage = errorMessage.split(':')[2].trim().split(',')[1].trim();
+            this.showToast('Error creating Question Set', customErrorMessage, 'error');
+        }
     }
 
-    //// checks whether setName is selected or not
+    // validates whether setName is selected or not
     validateSetName() {
         const combobox = this.template.querySelector('lightning-combobox');
         if (!this.setName) {
@@ -116,12 +125,12 @@ export default class CquiQuestionSet extends LightningElement {
         }
     }
 
-    //// saves setName
+    // stores user selected SetName in setName variable
     handleSetNameChange(event) {
         this.setName = event.target.value;
     }
 
-    //// handles pagination logic
+    //handles pagination and stores selectedIds across all pages of table
     handlePageChange(event) {
         const direction = event.target.dataset.direction;
         if (direction === 'previous' && this.page > 1) {
@@ -130,36 +139,51 @@ export default class CquiQuestionSet extends LightningElement {
             this.page += 1;
         }
         this.updateDisplayedQuestions();
-        this.selectedQuestions = [...this.selectedQuestionsByPage[this.page]];
+        if (!this.selectedQuestionsByPage[this.page]) {
+            this.selectedQuestionsByPage[this.page] = [];
+        }
+        this.allSelectedQuestionIds = [...this.selectedQuestionsByPage[this.page]];
     }
 
-    get options() {
-        return SET_NAME;
-    }
-
-    //// condition for making create question btn enable
+    // condition that checks both setName and atleast one question is selected or not
     get isCreateButtonEnabled() {
         const isSetNameSelected = this.setName !== '';
         const isQuestionSelected = Object.values(this.selectedQuestionsByPage).some(pageQuestions => pageQuestions.length > 0);
         return isSetNameSelected && isQuestionSelected;
     }
 
-
-    get selectedQuestionsArray() {
-        return this.selectedQuestions;
+    //checks if it is first page of the table or not
+    get isFirstPage() {
+        return this.page === 1;
     }
 
-    //// renders question of all types
-    get renderedQuestions() {
-        return this.displayedQuestions.map(question => {
-            const { options, ...rest } = question;
-            if (options) {
-                return {
-                    ...rest,
-                    options: options.join(', ')
-                };
-            }
-            return question;
+    //checks if it is last page of the table or not
+    get isLastPage() {
+        return this.page === this.totalPages;
+    }
+
+    //checks if there are more than one page
+    get isMoreThanOnePage() {
+        return this.totalPages > 1 && this.displayedQuestions.length > 0;
+    }
+
+    // utilitity function to show success or error toast
+    showToast(title, message, variant) {
+        const event = new ShowToastEvent({
+            title,
+            message,
+            variant
         });
+        this.dispatchEvent(event);
+    }
+
+    // reset all variables values
+    resetState() {
+        this.displayedQuestions = [];
+        this.allSelectedQuestionIds = [];
+        this.selectedQuestionsByPage = {};
+        this.setName = '';
+
+        this.updateDisplayedQuestions();
     }
 }
