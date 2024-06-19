@@ -42,7 +42,6 @@ export default class CquiQuestionSet extends LightningElement {
     wiredQuestions({ error, data }) {
         if (data) {
             this.questions = data.map(record => {
-                console.log("Record::::", JSON.stringify(record));
                 return {
                     Id: record.Id,
                     SQX_Title__c: cleanQuestionString(record.SQX_Title__c),
@@ -96,19 +95,23 @@ export default class CquiQuestionSet extends LightningElement {
         if (!this.validateSetName()) {
             return;
         }
-
-        try {
-            await createQuestionSet({
-                setName: this.setName,
-                questionIds: this.allSelectedQuestionIds
-            });
+        await createQuestionSet({
+            setName: this.setName,
+            questionIds: this.allSelectedQuestionIds
+        }).then(() => {
             this.showToast('Success', 'Question Set Creation successful', 'success');
             this.resetState();
-        } catch (error) {
-            const errorMessage = error.body.message;
-            const customErrorMessage = errorMessage.split(':')[2].trim().split(',')[1].trim();
-            this.showToast('Error creating Question Set', customErrorMessage, 'error');
-        }
+        }).catch((error) => {
+            var errorMessage = error.body.message;
+            var customErrorMessage;
+            if (errorMessage.length > 40) {
+                customErrorMessage = errorMessage.split(':')[2].trim().split(',')[1].trim();
+
+            } else {
+                customErrorMessage = errorMessage;
+            }
+            this.showToast('Failure', customErrorMessage, 'Error');
+        });
     }
 
     // validates whether setName is selected or not
