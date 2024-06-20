@@ -1,12 +1,12 @@
 import createQuestionSet from '@salesforce/apex/SQX_questionSetController.createQuestionSet';
 import getQuestions from '@salesforce/apex/SQX_questionSetController.getQuestions';
 import getSetPicklistValues from '@salesforce/apex/SQX_questionSetController.getSetPicklistValues';
-import ANSWER_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Answer__c';
+import ANSWER_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Correct_Answer__c';
 import OPTIONS_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Options__c';
 import TITLE_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Title__c';
 import TYPE_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Type__c';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { LightningElement, wire } from 'lwc';
+import { LightningElement, wire, track } from 'lwc';
 
 const COLUMNS = [
     { label: 'Title', fieldName: TITLE_FIELD.fieldApiName },
@@ -27,8 +27,8 @@ function cleanQuestionString(question) {
 export default class CquiQuestionSet extends LightningElement {
     displayedQuestions = [];
     allSelectedQuestionIds = [];
-    setPicklistValues = [];
-    questions = [];
+    @track setPicklistValues = [];
+    @track questions = [];
     selectedQuestionsByPage = {};
     setName = '';
     page = 1;
@@ -47,7 +47,7 @@ export default class CquiQuestionSet extends LightningElement {
                     SQX_Title__c: cleanQuestionString(record.SQX_Title__c),
                     SQX_Type__c: record.SQX_Type__c,
                     SQX_Options__c: record.SQX_Options__c,
-                    SQX_Answer__c: record.SQX_Answer__c
+                    SQX_Correct_Answer__c: record.SQX_Correct_Answer__c
                 };
             });
             if (this.questions.length < 7) {
@@ -63,8 +63,19 @@ export default class CquiQuestionSet extends LightningElement {
     // retrieves picklist value by calling method from controller and stores in setPicklistValuse array
     @wire(getSetPicklistValues)
     wiredSetPicklistValues({ error, data }) {
+        console.log('set:::',JSON.stringify(data));
         if (data) {
-            this.setPicklistValues = data.map(value => ({ label: value, value: value }));
+            // Use a Set to remove duplicates based on value.SQX_Name__c
+            const uniqueValues = new Set();
+            data.forEach(value => {
+                uniqueValues.add(value.SQX_Name__c);
+            });
+
+            // Convert Set back to an array of objects for picklist options
+            this.setPicklistValues = Array.from(uniqueValues).map(label => ({
+                label: label,
+                value: data.find(item => item.SQX_Name__c === label).Id // Assuming Id is unique per label
+            }));
             this.error = undefined;
         } else if (error) {
             this.error = error;

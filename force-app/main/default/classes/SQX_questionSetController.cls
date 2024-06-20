@@ -1,22 +1,21 @@
 public with sharing class SQX_questionSetController {
   
     @AuraEnabled(cacheable=true)
-    public static List<String> getSetPicklistValues() {
-        List<String> setValues = new List<String>();
-        Schema.DescribeFieldResult fieldResult = SQX_Question_Set__c.SQX_Set__c.getDescribe();
-        List<Schema.PicklistEntry> picklistEntries = fieldResult.getPicklistValues();
-
-        for (Schema.PicklistEntry entry : picklistEntries) {
-            setValues.add(entry.getLabel());
-        }
-        return setValues;
+    public static List<SQX_Set__c> getSetPicklistValues() {
+        System.debug('picklist');
+    
+        List <SQX_Set__c> setName= [SELECT Id, SQX_Name__c FROM SQX_Set__c]; 
+        System.debug('setNME:::'+setName);
+        return setName;
     }
+    
+    
 
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getQuestions() {
         List<Map<String, Object>> questions = new List<Map<String, Object>>();
         
-        List<SQX_Question__c> quesRecords = [SELECT Id, SQX_Title__c, SQX_Type__c, SQX_Options__c, SQX_Answer__c FROM SQX_Question__c where SQX_Status__c='Approved' with SECURITY_ENFORCED];
+        List<SQX_Question__c> quesRecords = [SELECT Id, SQX_Title__c, SQX_Type__c, SQX_Options__c, SQX_Correct_Answer__c FROM SQX_Question__c where SQX_Status__c='Approved' with SECURITY_ENFORCED];
         
         for (SQX_Question__c record : quesRecords) {
             Map<String, Object> question = new Map<String, Object>();
@@ -24,7 +23,7 @@ public with sharing class SQX_questionSetController {
             question.put('SQX_Title__c', record.SQX_Title__c);
             question.put('SQX_Type__c', record.SQX_Type__c);
             question.put('SQX_Options__c', record.SQX_Options__c);
-            question.put('SQX_Answer__c', record.SQX_Answer__c);
+            question.put('SQX_Correct_Answer__c', record.SQX_Correct_Answer__c);
             questions.add(question);
         }
         return questions;
