@@ -6,6 +6,15 @@ export default class ExamComponent extends LightningElement {
     @track exams = [];
     @track error;
 
+    // connectedCallback() {
+    //     const savedStartTime = localStorage.getItem('startTime');
+    //     if (savedStartTime) {
+    //         this.startTimer();
+           
+    //     }
+
+    // }
+
     @wire(getAssignedQuestions)
     wiredExams({ error, data }) {
         console.log('data:::'+JSON.stringify(data));
