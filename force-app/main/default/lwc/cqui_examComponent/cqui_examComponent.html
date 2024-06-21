@@ -1,8 +1,4 @@
 <template>
-    <!-- <template if:false={showModal}>
-        
-        <c-cqui_clock start-timer-on-load={startTimerOnLoad}></c-cqui_clock>
-    </template> -->
     <lightning-card title="Assigned Questions">
         <template if:true={exams}>
             <template for:each={numberedExams} for:item="exam">

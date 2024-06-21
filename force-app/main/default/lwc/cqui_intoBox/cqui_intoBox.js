@@ -1,28 +1,4 @@
 
-// import { LightningElement } from 'lwc';
-
-// export default class IntroBox extends LightningElement {
-//     showModal = true;
-
-//     connectedCallback() {
-//         const savedStartTime = localStorage.getItem('startTime');
-//         if (!savedStartTime) {
-//             this.showModal = true;
-//         } else {
-//             this.showModal = false;
-//             this.dispatchEvent(new CustomEvent('starttimer'));
-//         }
-//     }
-
-//     startExam() {
-//         this.showModal = false;
-//         console.log("starting Exam");
-
-        
-//     }
-// }
-// introBox.js
-// introBox.js
 import { LightningElement } from 'lwc';
 
 export default class IntroBox extends LightningElement {
@@ -36,16 +12,21 @@ export default class IntroBox extends LightningElement {
         if (!savedStartTime) {
             this.showModal = true;
         } else {
-            this.showModal = true;
+            this.showModal = false; // Hide the modal if exam has started previously
+            this.startTimerOnLoad = true;
         }
     }
 
     startExam() {
         console.log("Starting Exam");
         this.showModal = false;
+        this.examStarted = true;
         localStorage.setItem('startTime', Math.floor(Date.now() / 1000).toString());
         this.startTimerOnLoad = true; // Set flag to start timer
-        this.modalBackdropClass = ''; 
+        // this.modalBackdropClass = ''; 
         
     }
+    // get modalBackdropClass() {
+    //     return this.showModal ? 'modal-backdrop' : '';}
+    
 }

@@ -41,4 +41,13 @@
 .modal-button:hover {
     background-color: #0056b3;
 }
-
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.75); /* Darken the background */
+    z-index: 1040;
+    backdrop-filter: blur(10px); /* Apply a stronger blur */
+}
