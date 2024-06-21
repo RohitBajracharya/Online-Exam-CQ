@@ -3,7 +3,6 @@ import { LightningElement } from 'lwc';
 
 export default class IntroBox extends LightningElement {
     showModal = true;
-   
     startTimerOnLoad = false; // Flag to start the timer on button click
 
     connectedCallback() {
@@ -14,6 +13,8 @@ export default class IntroBox extends LightningElement {
         } else {
             this.showModal = false; // Hide the modal if exam has started previously
             this.startTimerOnLoad = true;
+            
+           
         }
     }
 
@@ -23,6 +24,7 @@ export default class IntroBox extends LightningElement {
         this.examStarted = true;
         localStorage.setItem('startTime', Math.floor(Date.now() / 1000).toString());
         this.startTimerOnLoad = true; // Set flag to start timer
+        
         // this.modalBackdropClass = ''; 
         
     }
@@ -30,3 +32,5 @@ export default class IntroBox extends LightningElement {
     //     return this.showModal ? 'modal-backdrop' : '';}
     
 }
+
+

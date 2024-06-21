@@ -7,35 +7,38 @@ export default class Clock extends LightningElement {
     displayTime ;
     timer; // Initial display time
     
+    
     connectedCallback() {
         const savedStartTime = localStorage.getItem('startTime');
         if (savedStartTime) {
-            this.startTime = parseInt(savedStartTime, 10);
-            this.startTimer();
-        } else {
-            this.fetchExamDuration();
+            this.startTimer();  
         }
     }
-    
-    // connectedCallback() {
-    //     const savedStartTime = localStorage.getItem('startTime');
-    //     if (savedStartTime) {
-    //         this.startTimer();  
-    //     }
-    // }
 
     // connectedCallback() {
     //     // retrieve start time from local storage
     //     const savedStartTime = localStorage.getItem('startTime');
     //     // checks if start time is saved or not
-    //     if (savedStartTime {
+    //     if (savedStartTime) {
     //         this.startTimer = parseInt(savedStartTime);
     //     } 
-    //     // else {
+    //     else {
 
-    //     //     this.startTimer = Math.floor(Date.now() / 1000); // Current timestamp in seconds
-    //     //     localStorage.setItem('startTime', this.startTime.toString());
-    //     // }
+    //         this.startTimer = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+    //         localStorage.setItem('startTime', this.startTime.toString());
+    //     }
+    //       // Calculate initial remaining time and update display
+    //       const currentTime = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+    //       const elapsedTime = currentTime - this.startTime;
+    //       const remainingTime = this.minutes * 60 - elapsedTime;
+    //       if (remainingTime > 0) {
+    //           this.updateTime(remainingTime);
+    //           this.startTimer();
+    //       } else {
+    //           // If remaining time is not positive, clear the start time from storage
+    //           clearInterval(this.timer);
+    //           localStorage.removeItem('startTime');
+    //       }
     // }
 
     @wire(getExamDuration)
@@ -63,6 +66,7 @@ export default class Clock extends LightningElement {
             } else {
                 this.updateTime(0); // Update display to show 00:00:00
                 clearInterval(this.timer);
+                localStorage.removeItem('startTime');
             }
         }, 1000);
     }
