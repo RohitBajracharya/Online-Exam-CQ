@@ -1,10 +1,12 @@
 <template>
-    <lightning-card title="Assigned Questions">
+    <lightning-card title="Assigned Questions"   >
         <template if:true={exams}>
             <template for:each={numberedExams} for:item="exam">
+              
                 <div key={exam.Id} class="slds-box slds-m-around_medium">
-                   
+                    <!-- <p><strong>Set Name:</strong> {Set_Name}</p> -->
                     <p style="font-size: larger;" ><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
+                    
                     <template if:true={exam.isMCQ}>
                         <p><strong>Options:</strong> </p>
                         <template for:each={exam.questionOptions} for:item="option">
@@ -32,9 +34,13 @@
                 </div>
             </template>
         </template>
+
         <template if:true={error}>
             <p>{error.body.message}</p>
         </template>
+        <div class="slds-m-top_medium " >
+            <lightning-button label="Submit" class="slds-align_absolute-center"  variant="brand" onclick={handleSubmit}></lightning-button>
+        </div>
     </lightning-card>
 </template>
 

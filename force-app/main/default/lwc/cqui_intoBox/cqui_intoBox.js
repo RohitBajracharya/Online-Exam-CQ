@@ -12,7 +12,7 @@ export default class IntroBox extends LightningElement {
         if (!savedStartTime) {
             this.showModal = true;
         } else {
-            this.showModal = true; // Hide the modal if exam has started previously
+            this.showModal = false; // Hide the modal if exam has started previously
             this.startTimerOnLoad = true;
         }
     }
@@ -26,7 +26,7 @@ export default class IntroBox extends LightningElement {
         // this.modalBackdropClass = ''; 
         
     }
-    get modalBackdropClass() {
-        return this.showModal ? 'modal-backdrop' : '';}
+    // get modalBackdropClass() {
+    //     return this.showModal ? 'modal-backdrop' : '';}
     
 }

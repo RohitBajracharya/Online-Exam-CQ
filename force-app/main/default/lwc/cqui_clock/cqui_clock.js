@@ -4,17 +4,39 @@ import getExamDuration from '@salesforce/apex/SQX_examController.getExamDuration
 export default class Clock extends LightningElement {
     minutes; // Default duration in minutes, adjust as needed
     startTime;
-    displayTime ; // Initial display time
-    
+    displayTime ;
+    timer; // Initial display time
     
     connectedCallback() {
         const savedStartTime = localStorage.getItem('startTime');
         if (savedStartTime) {
+            this.startTime = parseInt(savedStartTime, 10);
             this.startTimer();
-           
+        } else {
+            this.fetchExamDuration();
         }
-
     }
+    
+    // connectedCallback() {
+    //     const savedStartTime = localStorage.getItem('startTime');
+    //     if (savedStartTime) {
+    //         this.startTimer();  
+    //     }
+    // }
+
+    // connectedCallback() {
+    //     // retrieve start time from local storage
+    //     const savedStartTime = localStorage.getItem('startTime');
+    //     // checks if start time is saved or not
+    //     if (savedStartTime {
+    //         this.startTimer = parseInt(savedStartTime);
+    //     } 
+    //     // else {
+
+    //     //     this.startTimer = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+    //     //     localStorage.setItem('startTime', this.startTime.toString());
+    //     // }
+    // }
 
     @wire(getExamDuration)
     wiredExamDuration({ error, data }) {
@@ -44,7 +66,7 @@ export default class Clock extends LightningElement {
             }
         }, 1000);
     }
-
+    // converts the total seconds into hr, min and sec and update displayTime
     updateTime(totalSeconds) {
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -52,7 +74,7 @@ export default class Clock extends LightningElement {
 
         this.displayTime = `${this.formatTime(hours)}:${this.formatTime(minutes)}:${this.formatTime(seconds)}`;
     }
-
+    // converts the time format into 00:00:00
     formatTime(unit) {
         return unit < 10 ? '0' + unit : unit.toString();
     }
