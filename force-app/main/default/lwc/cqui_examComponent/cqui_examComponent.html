@@ -1,0 +1,43 @@
+<template>
+    <!-- <template if:false={showModal}>
+        
+        <c-cqui_clock start-timer-on-load={startTimerOnLoad}></c-cqui_clock>
+    </template> -->
+    <lightning-card title="Assigned Questions">
+        <template if:true={exams}>
+            <template for:each={numberedExams} for:item="exam">
+                <div key={exam.Id} class="slds-box slds-m-around_medium">
+                    <p style="font-size: larger;" ><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
+                    <template if:true={exam.isMCQ}>
+                        <p><strong>Options:</strong> </p>
+                        <template for:each={exam.questionOptions} for:item="option">
+                            <div key={option}>
+                                <input type="radio" name={exam.Id} value={option} data-id={exam.Id} onchange={handleOptionChange}/>
+                                <label> {option}</label>
+                            </div>
+                        </template>
+                    </template>
+                    <template if:true={exam.isMultiple_Select_MCQ}>
+                        <p><strong>Options:</strong> </p>
+                        <template for:each={exam.questionOptions} for:item="option">
+                            <div key={option}>
+                                <input class="slds-text-heading_large" type="checkbox" name={exam.Id} value={option} data-id={exam.Id} onchange={handleOptionChange}/>
+                                <label> {option}</label>
+                            </div>
+                        </template>
+                    </template>
+
+                    <template if:true={exam.isFreeEnd}>
+                        <!-- <p><strong>Your Answer:</strong></p> -->
+                        <lightning-textarea name="freeEndAnswer" label="Answer" data-id={exam.Id} value={exam.userAnswer} onchange={handleAnswerChange}></lightning-textarea>
+                    </template>
+                    
+                </div>
+            </template>
+        </template>
+        <template if:true={error}>
+            <p>{error.body.message}</p>
+        </template>
+    </lightning-card>
+</template>
+
