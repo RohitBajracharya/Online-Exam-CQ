@@ -5,10 +5,25 @@ import ANSWER_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Correct_Answer_
 import OPTIONS_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Options__c';
 import TITLE_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Title__c';
 import TYPE_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Type__c';
+import  NAME_FIELD from '@salesforce/schema/SQX_Question__c.Name';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { LightningElement, wire, track } from 'lwc';
 
+
+
 const COLUMNS = [
+    
+    { 
+        label: 'Question Name',
+        fieldName: 'recordLink',
+        type: 'url',
+        typeAttributes: {  
+            label: {
+                fieldName: NAME_FIELD.fieldApiName
+            },
+            target: '_self'
+        }
+    },
     { label: 'Title', fieldName: TITLE_FIELD.fieldApiName },
     { label: 'Type', fieldName: TYPE_FIELD.fieldApiName },
     { label: 'Answer', fieldName: ANSWER_FIELD.fieldApiName },
@@ -44,6 +59,8 @@ export default class CquiQuestionSet extends LightningElement {
             this.questions = data.map(record => {
                 return {
                     Id: record.Id,
+                    Name: record.Name,
+                    recordLink: '/' + record.Id,
                     SQX_Title__c: cleanQuestionString(record.SQX_Title__c),
                     SQX_Type__c: record.SQX_Type__c,
                     SQX_Options__c: record.SQX_Options__c,
