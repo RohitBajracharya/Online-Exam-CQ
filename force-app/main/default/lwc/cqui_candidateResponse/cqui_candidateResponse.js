@@ -7,7 +7,9 @@ export default class CandidateResponse extends LightningElement {
         { label: 'Assign To', fieldName: 'assignTo', type: 'text' },
         { label: 'Set', fieldName: 'examSet', type: 'text' },
         { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number' },
-        { label: 'Actions', fieldName: 'actions',
+        { label: 'Admin Approval', fieldName: 'adminApproved', type: 'picklist' },
+        {
+            label: 'Actions', fieldName: 'actions',
             type: 'button',
             typeAttributes: {
                 label: 'View Details',

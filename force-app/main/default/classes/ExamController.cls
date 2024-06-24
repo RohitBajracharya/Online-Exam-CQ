@@ -1,27 +1,27 @@
 public with sharing class ExamController {
     @AuraEnabled(cacheable=true)
     public static List<ExamWrapper> getExamData() {
+        List<SQX_Candidate_Response__c> candidateResponses = [
+            SELECT Id, SQX_Exam__r.SQX_Assign_To__r.Name, SQX_Exam__r.SQX_Set_Name_Display__c, SQX_Exam__r.SQX_Obtained_Marks__c ,SQX_Admin_Approved__c
+            FROM SQX_Candidate_Response__c
+        ];
+        
         List<ExamWrapper> examWrappers = new List<ExamWrapper>();
         
-        // Dummy data set 1
-        ExamWrapper exam1 = new ExamWrapper();
-        exam1.assignTo = 'John Doe';
-        exam1.examSet = 'A';
-        exam1.obtainedMarks = 0;
-        examWrappers.add(exam1);
-        
-        // Dummy data set 2
-        ExamWrapper exam2 = new ExamWrapper();
-        exam2.assignTo = 'Jane Smith';
-        exam2.examSet = 'B';
-        exam2.obtainedMarks = 0;
-        examWrappers.add(exam2);
-        
-        // Add more dummy data sets as needed
+        for (SQX_Candidate_Response__c candidateResponse : candidateResponses) {
+            ExamWrapper examWrapper = new ExamWrapper();
+            examWrapper.assignTo = candidateResponse.SQX_Exam__r.SQX_Assign_To__r.Name;
+            examWrapper.examSet = candidateResponse.SQX_Exam__r.SQX_Set_Name_Display__c;
+            examWrapper.obtainedMarks = candidateResponse.SQX_Exam__r.SQX_Obtained_Marks__c;
+            examWrapper.adminApproved = candidateResponse.SQX_Admin_Approved__c;
+            examWrappers.add(examWrapper);
+        }
         
         return examWrappers;
     }
     
+    
+
     public class ExamWrapper {
         @AuraEnabled
         public String assignTo { get; set; }
@@ -29,7 +29,7 @@ public with sharing class ExamController {
         public String examSet { get; set; }
         @AuraEnabled
         public Decimal obtainedMarks { get; set; }
-        
-        // Constructor is not needed for dummy data, can be omitted
+        @AuraEnabled
+        public String adminApproved { get; set; }
     }
 }

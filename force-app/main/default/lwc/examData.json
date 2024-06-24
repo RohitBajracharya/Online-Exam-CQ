@@ -1,0 +1,22 @@
+[
+    {
+        "assignTo": "Alice Johnson",
+        "examSet": "A",
+        "obtainedMarks": 0
+    },
+    {
+        "assignTo": "Bob Brown",
+        "examSet": "B",
+        "obtainedMarks": 0
+    },
+    {
+        "assignTo": "Charlie Davis",
+        "examSet": "A",
+        "obtainedMarks": 0
+    },
+    {
+        "assignTo": "Dana Evans",
+        "examSet": "C",
+        "obtainedMarks": 0
+    }
+]
