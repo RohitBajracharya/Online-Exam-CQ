@@ -78,6 +78,20 @@ public with sharing class SQX_examController {
         }
     }
 
+    @AuraEnabled
+    public static void saveObtainedMarks(Decimal obtainedMarks){
+        try {
+            Id currentUserId = UserInfo.getUserId();
+            // Query to fetch question set IDs assigned to the user
+            SQX_Exam__c exam=[Select SQX_Obtained_Marks__c,SQX_Status__c from SQX_Exam__c  WHERE SQX_Assign_To__c = :currentUserId];
+            exam.SQX_Obtained_Marks__c=obtainedMarks;
+            exam.SQX_Status__c='Completed';
+            update exam;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
    
 }
 
