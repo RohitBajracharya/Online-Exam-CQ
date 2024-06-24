@@ -3,10 +3,11 @@ public with sharing class SQX_examController {
     public static List<Map<String, Object>> getAssignedQuestions() {
         List<Map<String, Object>> exams = new List<Map<String, Object>>();
         Id currentUserId = UserInfo.getUserId();
+        Id examId;
 
        // Query to fetch question set IDs assigned to the user
         List<SQX_Exam__c> examRecords = [
-            SELECT SQX_Set__c
+            SELECT Id,SQX_Set__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId
         ];
@@ -14,25 +15,29 @@ public with sharing class SQX_examController {
         Set<Id> setIds = new Set<Id>();
         for (SQX_Exam__c exam : examRecords) {
             setIds.add(exam.SQX_Set__c);
+            examId=exam.Id;
         }
 
         // Query to fetch questions related to the assigned question sets
         List<SQX_Question_Set__c> questionSetRecords = [
             SELECT Id, Name, SQX_Set__c, SQX_Set__r.SQX_Name__c, SQX_Question__c, 
                    SQX_Question__r.SQX_Title__c, SQX_Question__r.SQX_Type__c, 
-                   SQX_Question__r.SQX_Options__c
+                   SQX_Question__r.SQX_Options__c,SQX_Question__r.SQX_Correct_Answer__c
             FROM SQX_Question_Set__c
             WHERE SQX_Set__c IN :setIds
         ];
+        System.debug('questionSetRecords:::'+questionSetRecords);
 
         for (SQX_Question_Set__c questionSet : questionSetRecords) {
             if (questionSet.SQX_Question__r != null) {
                 Map<String, Object> questionMap = new Map<String, Object>();
-                questionMap.put('Id', questionSet.Id);
+                questionMap.put('Id', examId);
+                questionMap.put('QuestionId', questionSet.SQX_Question__c);
                 questionMap.put('Name', questionSet.Name);
                 questionMap.put('Set_Name', questionSet.SQX_Set__r.SQX_Name__c);
                 questionMap.put('Question_Title', questionSet.SQX_Question__r.SQX_Title__c);
                 questionMap.put('Question_Type', questionSet.SQX_Question__r.SQX_Type__c);
+                questionMap.put('Correct_Answer',questionSet.SQX_Question__r.SQX_Correct_Answer__c);
     
                 if (questionSet.SQX_Question__r.SQX_Type__c == 'MCQ' || questionSet.SQX_Question__r.SQX_Type__c == 'Multiple Select MCQ') {
                     questionMap.put('Question_Options', questionSet.SQX_Question__r.SQX_Options__c);
@@ -45,9 +50,9 @@ public with sharing class SQX_examController {
                 exams.add(questionMap);
             }
         }
-
         return exams;
     }
+
     @AuraEnabled(cacheable=true)
     public static String getExamDuration() {
         Id currentUserId = UserInfo.getUserId();
@@ -59,5 +64,20 @@ public with sharing class SQX_examController {
         ];
         return examRecord.SQX_Duration__c;
     }
+
+    @AuraEnabled
+    public static void saveCandidateResponse(List<Map<String, Object>> userAnswers, String examId) {
+        try {
+            SQX_Candidate_Response__c response = new SQX_Candidate_Response__c();
+            response.SQX_Exam__c = examId;
+            response.SQX_Candidate_Answer__c = JSON.serialize(userAnswers);
+            
+            insert response;
+        } catch (Exception e) {
+            throw new AuraHandledException('Error saving candidate response: ' + e.getMessage());
+        }
+    }
+
+   
 }
 
