@@ -24,11 +24,12 @@ public with sharing class SQX_examController {
             FROM SQX_Question_Set__c
             WHERE SQX_Set__c IN :setIds
         ];
+        System.debug('questionSetRecords:::'+questionSetRecords);
 
         for (SQX_Question_Set__c questionSet : questionSetRecords) {
             if (questionSet.SQX_Question__r != null) {
                 Map<String, Object> questionMap = new Map<String, Object>();
-                questionMap.put('Id', questionSet.Id);
+                questionMap.put('Id', questionSet.SQX_Question__c);
                 questionMap.put('Name', questionSet.Name);
                 questionMap.put('Set_Name', questionSet.SQX_Set__r.SQX_Name__c);
                 questionMap.put('Question_Title', questionSet.SQX_Question__r.SQX_Title__c);

@@ -4,14 +4,12 @@
             <template for:each={numberedExams} for:item="exam">
               
                 <div key={exam.Id} class="slds-box slds-m-around_medium">
-                    <!-- <p><strong>Set Name:</strong> {Set_Name}</p> -->
-                    <p style="font-size: larger;" ><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
-                    
+                    <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
                     <template if:true={exam.isMCQ}>
                         <p><strong>Options:</strong> </p>
                         <template for:each={exam.questionOptions} for:item="option">
                             <div key={option}>
-                                <input type="radio" name={exam.Id} value={option} data-id={exam.Id} onchange={handleOptionChange}/>
+                                <input type="radio" name={exam.Id} value={option} data-id={exam.Id} data-number={exam.number} onchange={handleOptionChange} />
                                 <label> {option}</label>
                             </div>
                         </template>
@@ -20,17 +18,14 @@
                         <p><strong>Options:</strong> </p>
                         <template for:each={exam.questionOptions} for:item="option">
                             <div key={option}>
-                                <input class="slds-text-heading_large" type="checkbox" name={exam.Id} value={option} data-id={exam.Id} onchange={handleOptionChange}/>
+                                <input class="slds-text-heading_large" type="checkbox" name={exam.Id} value={option} data-id={exam.Id} data-number={exam.number} onchange={handleOptionChange} />
                                 <label> {option}</label>
                             </div>
                         </template>
                     </template>
-
                     <template if:true={exam.isFreeEnd}>
-                        <!-- <p><strong>Your Answer:</strong></p> -->
-                        <lightning-textarea name="freeEndAnswer" label="Answer" data-id={exam.Id} value={exam.userAnswer} onchange={handleAnswerChange}></lightning-textarea>
+                        <lightning-textarea name="freeEndAnswer" label="Answer" data-id={exam.Id} data-number={exam.number} value={exam.userAnswer} onchange={handleAnswerChange}></lightning-textarea>
                     </template>
-                    
                 </div>
             </template>
         </template>
@@ -43,4 +38,3 @@
         </div>
     </lightning-card>
 </template>
-
