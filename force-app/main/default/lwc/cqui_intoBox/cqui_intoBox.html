@@ -17,8 +17,10 @@
     
     <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
     <template if:true={isExamStarted}>
+        <div class="non-scrollable-container">
         <c-cqui_clock if:false={examFinished}></c-cqui_clock>
         <c-cqui_exam-component onexamfinished={handleExamFinished}></c-cqui_exam-component>
+    </div>
     </template>
     
 </template>

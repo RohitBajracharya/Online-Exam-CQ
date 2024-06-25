@@ -14,13 +14,19 @@ export default class ExamComponent extends LightningElement {
     @track showModal = false; // Track modal visibility
     obtainedMarks = 0; // Track obtained marks
     examId;
-
+    setName = '';
+    fullMarks = ''; 
+    passMarks = '';
     connectedCallback() {
 
         // Fetch assigned questions using wire service
         getAssignedQuestions()
             .then(result => {
                 if (result && result.length > 0) {
+                    this.setName = result[0].Set_Name;
+                    this.fullMarks = result[0].Full_Marks;
+                    this.passMarks = result[0].Pass_Marks;
+
                     this.exams = result.map((exam, idx) => {
                         const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
                         return {
