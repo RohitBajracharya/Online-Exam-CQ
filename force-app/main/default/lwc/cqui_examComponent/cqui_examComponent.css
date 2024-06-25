@@ -1,0 +1,16 @@
+
+
+.correct-answer {
+    color: green;
+}
+
+.incorrect-answer {
+    color: red;
+}
+
+.default-option {
+    color: black; 
+}
+.unattempted-correct-answer {
+    color: rgb(43, 0, 255);
+}

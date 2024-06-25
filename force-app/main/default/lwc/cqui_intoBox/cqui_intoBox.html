@@ -1,0 +1,47 @@
+<template>
+    
+    <div if:true={showModal} role="dialog" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+       
+        <div class="slds-modal__container">
+            <div class="slds-modal__header">
+                <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate" tabindex="-1">About Exam</h1>
+            </div>
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                <p class="slds-m-top_x-small">Welcome to the exam session. Please note that the exam will automatically submit once the allocated time elapses. However, if you complete your responses before the deadline, you can manually submit them at any time. To commence the exam, kindly press the "Start Exam" button. Best of luck!</p>
+            </div>
+            <div class="slds-modal__footer">
+                <button class="slds-button slds-button_brand" onclick={startExam} aria-label="startExam">Start Exam</button>
+            </div>
+        </div>
+    </div>
+    
+    <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    <template if:false={showModal}>
+        
+        <c-cqui_clock start-timer-on-load={startTimerOnLoad}></c-cqui_clock>
+        <!-- <c-cqui_examComponent start-timer-on-load={startTimerOnLoad}></c-cqui_examComponent> -->
+        
+    </template>
+    
+</template>
+
+
+
+<!-- <template>
+    <div class="modal" if:true={isModalOpen}>
+        <div class="modal-content">
+            <h2>About Exam</h2>
+            <p>
+                Welcome to the exam session. The duration of this examination is set to 60 minutes. 
+                Please note that the exam will automatically submit once the allocated time elapses. 
+                However, if you complete your responses before the deadline, you can manually submit them at any time. 
+                To commence the exam, kindly press the "Start Exam" button. Best of luck!
+            </p>
+            <div class="modal-footer">
+                <button class="modal-button" onclick={startExam}>Start Exam</button>
+            </div>
+        </div>
+    </div>
+</template> -->
+
+
