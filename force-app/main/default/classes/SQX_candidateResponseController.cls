@@ -1,4 +1,4 @@
-public with sharing class ExamController {
+public with sharing class SQX_candidateResponseController {
     @AuraEnabled(cacheable=true)
     public static List<ExamWrapper> getExamData() {
         List<SQX_Candidate_Response__c> candidateResponses = [

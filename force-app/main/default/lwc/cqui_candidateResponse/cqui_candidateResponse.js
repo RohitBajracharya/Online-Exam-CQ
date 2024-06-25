@@ -1,5 +1,5 @@
 import { LightningElement, wire, track } from 'lwc';
-import getExamData from '@salesforce/apex/ExamController.getExamData';
+import getExamData from '@salesforce/apex/SQX_candidateResponseController.getExamData';
 import { refreshApex } from '@salesforce/apex';
 
 const columns = [
