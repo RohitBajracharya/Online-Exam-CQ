@@ -16,11 +16,9 @@
     </div>
     
     <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
-    <template if:false={showModal}>
-        
-        <c-cqui_clock start-timer-on-load={startTimerOnLoad}></c-cqui_clock>
-        <!-- <c-cqui_examComponent start-timer-on-load={startTimerOnLoad}></c-cqui_examComponent> -->
-        
+    <template if:true={isExamStarted}>
+        <c-cqui_clock if:false={examFinished}></c-cqui_clock>
+        <c-cqui_exam-component onexamfinished={handleExamFinished}></c-cqui_exam-component>
     </template>
     
 </template>
