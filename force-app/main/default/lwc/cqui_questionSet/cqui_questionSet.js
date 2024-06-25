@@ -25,19 +25,18 @@ function cleanQuestionString(question) {
 }
 
 export default class CquiQuestionSet extends LightningElement {
-    displayedQuestions = [];
-    allSelectedQuestionIds = [];
+    @track displayedQuestions = [];
+    @track allSelectedQuestionIds = [];
     @track setPicklistValues = [];
     @track questions = [];
     selectedQuestionsByPage = {};
     setName = '';
     page = 1;
     questionPerPage = 7;
-    totalPages = 1;
     columns = COLUMNS;
+    searchTerm = '';
     error;
 
-    // retrieves questions record by calling method from controller and stores in questions array after cleaning the title, calculates totalPages and updates the questions that needs to be displayed in every page
     @wire(getQuestions)
     wiredQuestions({ error, data }) {
         if (data) {
@@ -50,28 +49,28 @@ export default class CquiQuestionSet extends LightningElement {
                     SQX_Correct_Answer__c: record.SQX_Correct_Answer__c
                 };
             });
-            if (this.questions.length < 7) {
-                this.questionPerPage = this.questions.length;
-            }
-            this.totalPages = Math.ceil(this.questions.length / this.questionPerPage);
+            this.updateTotalPages();
             this.updateDisplayedQuestions();
         } else if (error) {
             console.error('Error:', error);
         }
     }
 
-    // retrieves picklist value by calling method from controller and stores in setPicklistValuse array
+    handleSearchTermChange(event) {
+        this.searchTerm = event.target.value.toLowerCase().trim();
+        this.page = 1; // Reset to first page on new search
+        this.updateTotalPages();
+        this.updateDisplayedQuestions();
+    }
+
     @wire(getSetPicklistValues)
     wiredSetPicklistValues({ error, data }) {
-        console.log('set:::',JSON.stringify(data));
         if (data) {
-            // Use a Set to remove duplicates based on value.SQX_Name__c
             const uniqueValues = new Set();
             data.forEach(value => {
                 uniqueValues.add(value.SQX_Name__c);
             });
 
-            // Convert Set back to an array of objects for picklist options
             this.setPicklistValues = Array.from(uniqueValues).map(label => ({
                 label: label,
                 value: data.find(item => item.SQX_Name__c === label).Id // Assuming Id is unique per label
@@ -83,14 +82,17 @@ export default class CquiQuestionSet extends LightningElement {
         }
     }
 
-    // method that decides which questions are needed to be displayed on each pages of the table
     updateDisplayedQuestions() {
+        const searchTerm = this.searchTerm.trim().toLowerCase();
+        const filteredQuestions = this.questions.filter(record =>
+            record.SQX_Title__c.trim().toLowerCase().includes(searchTerm) ||
+            record.SQX_Type__c.trim().toLowerCase().includes(searchTerm)
+        );
         const startIndex = (this.page - 1) * this.questionPerPage;
         const endIndex = startIndex + this.questionPerPage;
-        this.displayedQuestions = this.questions.slice(startIndex, endIndex);
+        this.displayedQuestions = filteredQuestions.slice(startIndex, endIndex);
     }
 
-    // method that saves selected Question Ids and maintained this record across all pages of table
     handleRowSelection(event) {
         const selectedRows = event.detail.selectedRows;
         const selectedIds = selectedRows.map(row => row.Id);
@@ -101,8 +103,7 @@ export default class CquiQuestionSet extends LightningElement {
         this.allSelectedQuestionIds = [...new Set(allSelectedIds)];
     }
 
-    //method that validates if setName is selected or not, then inserts selected QuestionIds in SQX_Question_Set__c object and show corresponding success or error toast.
-    async handleCreateQuestionSet(event) {
+    async handleCreateQuestionSet() {
         if (!this.validateSetName()) {
             return;
         }
@@ -117,15 +118,13 @@ export default class CquiQuestionSet extends LightningElement {
             var customErrorMessage;
             if (errorMessage.length > 40) {
                 customErrorMessage = errorMessage.split(':')[2].trim().split(',')[1].trim();
-
             } else {
                 customErrorMessage = errorMessage;
             }
-            this.showToast('Failure', customErrorMessage, 'Error');
+            this.showToast('Failure', customErrorMessage, 'error');
         });
     }
 
-    // validates whether setName is selected or not
     validateSetName() {
         const combobox = this.template.querySelector('lightning-combobox');
         if (!this.setName) {
@@ -139,12 +138,10 @@ export default class CquiQuestionSet extends LightningElement {
         }
     }
 
-    // stores user selected SetName in setName variable
     handleSetNameChange(event) {
         this.setName = event.target.value;
     }
 
-    //handles pagination and stores selectedIds across all pages of table
     handlePageChange(event) {
         const direction = event.target.dataset.direction;
         if (direction === 'previous' && this.page > 1) {
@@ -159,29 +156,40 @@ export default class CquiQuestionSet extends LightningElement {
         this.allSelectedQuestionIds = [...this.selectedQuestionsByPage[this.page]];
     }
 
-    // condition that checks both setName and atleast one question is selected or not
+    updateTotalPages() {
+        const searchTerm = this.searchTerm.trim().toLowerCase();
+        const filteredQuestions = this.questions.filter(record =>
+            record.SQX_Title__c.trim().toLowerCase().includes(searchTerm) ||
+            record.SQX_Type__c.trim().toLowerCase().includes(searchTerm)
+        );
+        this.totalPages = Math.ceil(filteredQuestions.length / this.questionPerPage);
+    }
+
+    get totalPages() {
+        return this._totalPages || 1;
+    }
+    set totalPages(value) {
+        this._totalPages = value;
+    }
+
     get isCreateButtonEnabled() {
         const isSetNameSelected = this.setName !== '';
         const isQuestionSelected = Object.values(this.selectedQuestionsByPage).some(pageQuestions => pageQuestions.length > 0);
         return isSetNameSelected && isQuestionSelected;
     }
 
-    //checks if it is first page of the table or not
     get isFirstPage() {
         return this.page === 1;
     }
 
-    //checks if it is last page of the table or not
     get isLastPage() {
         return this.page === this.totalPages;
     }
 
-    //checks if there are more than one page
     get isMoreThanOnePage() {
         return this.totalPages > 1 && this.displayedQuestions.length > 0;
     }
 
-    // utilitity function to show success or error toast
     showToast(title, message, variant) {
         const event = new ShowToastEvent({
             title,
@@ -191,12 +199,13 @@ export default class CquiQuestionSet extends LightningElement {
         this.dispatchEvent(event);
     }
 
-    // reset all variables values
     resetState() {
         this.displayedQuestions = [];
         this.allSelectedQuestionIds = [];
         this.selectedQuestionsByPage = {};
         this.setName = '';
+        this.searchTerm = '';
+        this.page = 1;
 
         this.updateDisplayedQuestions();
     }

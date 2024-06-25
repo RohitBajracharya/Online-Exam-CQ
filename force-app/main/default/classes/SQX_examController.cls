@@ -78,6 +78,61 @@ public with sharing class SQX_examController {
         }
     }
 
+    @AuraEnabled
+    public static void saveObtainedMarks(Decimal obtainedMarks){
+        try {
+            Id currentUserId = UserInfo.getUserId();
+            // Query to fetch question set IDs assigned to the user
+            SQX_Exam__c exam=[Select SQX_Obtained_Marks__c,SQX_Status__c from SQX_Exam__c  WHERE SQX_Assign_To__c = :currentUserId];
+            exam.SQX_Obtained_Marks__c=obtainedMarks;
+            exam.SQX_Status__c='Completed';
+            update exam;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+    
+    @AuraEnabled
+    public static Boolean isAnswerSubmitted(Id examId) {
+        
+            Id currentUserId = UserInfo.getUserId();
+            // Query to check if candidate response exists for the specified exam
+            Integer responseCount = [
+                SELECT Count()
+                FROM SQX_Candidate_Response__c
+                WHERE SQX_Exam__c = :examId
+                AND OwnerId = :currentUserId
+            ];
+            List<SQX_Exam__c> exam=[Select Id from SQX_Exam__c where SQX_Status__c='Completed' and Id=:examId and SQX_Assign_To__c=:currentUserId];
+            return responseCount>0 && exam.size()>0;
+       
+    }
+
+    @AuraEnabled
+    public static List<String> getCandidateResponse(ID examId) {
+        try {
+            Id currentUserId = UserInfo.getUserId();
+
+            // Query to fetch candidate responses for the specified exam
+            List<SQX_Candidate_Response__c> responses = [
+                SELECT SQX_Candidate_Answer__c
+                FROM SQX_Candidate_Response__c
+                WHERE OwnerId = :currentUserId
+                and SQX_Exam__c=:examId
+            ];
+
+            // Prepare list of answers to return
+            List<String> formattedResponses = new List<String>();
+            for (SQX_Candidate_Response__c response : responses) {
+                formattedResponses.add(response.SQX_Candidate_Answer__c);
+            }
+
+            return formattedResponses;
+        } catch (Exception e) {
+            throw new AuraHandledException('Error fetching candidate response: ' + e.getMessage());
+        }
+    }
+
    
 }
 
