@@ -1,28 +1,41 @@
 import { LightningElement, wire, track } from 'lwc';
-import getExamData from '@salesforce/apex/ExamController.getExamData';
+import getExamData from '@salesforce/apex/SQX_candidateResponseController.getExamData';
+import { refreshApex } from '@salesforce/apex';
+
+const columns = [
+    { label: 'Assign To', fieldName: 'assignTo', type: 'text' },
+    { label: 'Set', fieldName: 'examSet', type: 'text' },
+    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number', editable: true },
+    { label: 'Admin Approval', fieldName: 'adminApproved', type: 'picklist', editable: true },
+    {
+        label: 'Actions', fieldName: 'actions',
+        type: 'button',
+        typeAttributes: {
+            label: 'View Details',
+            name: 'view_details',
+            title: 'Click to View Details'
+        }
+    }
+];
 
 export default class CandidateResponse extends LightningElement {
     @track data = [];
-    columns = [
-        { label: 'Assign To', fieldName: 'assignTo', type: 'text' },
-        { label: 'Set', fieldName: 'examSet', type: 'text' },
-        { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number' },
-        { label: 'Actions', fieldName: 'actions',
-            type: 'button',
-            typeAttributes: {
-                label: 'View Details',
-                name: 'view_details',
-                title: 'Click to View Details'
-            }
-        }
-    ];
+    columns = columns;
 
     @wire(getExamData)
-    wiredExams({ error, data }) {
-        if (data) {
-            this.data = data;
-        } else if (error) {
-            console.error(error);
+    wiredExams(result) {
+        this.refreshTable(result);
+    }
+
+    refreshTable(result) {
+        if (result.data) {
+            this.data = result.data.map(row => ({
+                ...row,
+                obtainedMarks: row.obtainedMarks,
+                adminApproval: row.adminApproval
+            }));
+        } else if (result.error) {
+            console.error(result.error);
         }
     }
 
@@ -40,8 +53,14 @@ export default class CandidateResponse extends LightningElement {
     }
 
     handleViewDetails(row) {
-        // Handle the view details action for the specific row
         console.log('View details for:', row);
-        // You can implement logic to navigate to a detailed view or show details in a modal here
+        // Implement logic to navigate to a detailed view or show details in a modal here
+    }
+
+    handleSave(event) {
+        const updatedFields = event.detail.draftValues;
+        console.log('Updated fields', updatedFields);
+        // Example: Call Apex method to save data
+        // refreshApex(this.wiredResult); // Uncomment if using refreshApex function
     }
 }
