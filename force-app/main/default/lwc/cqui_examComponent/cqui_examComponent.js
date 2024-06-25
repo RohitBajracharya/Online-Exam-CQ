@@ -1,8 +1,10 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_examController.getAssignedQuestions';
+import getCandidateResponse from '@salesforce/apex/SQX_examController.getCandidateResponse';
+import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmitted';
 import saveCandidateResponse from '@salesforce/apex/SQX_examController.saveCandidateResponse';
 import saveObtainedMarks from '@salesforce/apex/SQX_examController.saveObtainedMarks';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { LightningElement, track, wire } from 'lwc';
+import { LightningElement, track } from 'lwc';
 
 export default class ExamComponent extends LightningElement {
     @track exams = [];
@@ -13,37 +15,78 @@ export default class ExamComponent extends LightningElement {
     obtainedMarks = 0; // Track obtained marks
     examId;
 
-    // Fetch assigned questions using wire service
-    @wire(getAssignedQuestions)
-    wiredExams({ error, data }) {
-        if (data) {
-            this.exams = data.map((exam, idx) => {
-                const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
-                return {
-                    ...exam,
-                    Question_Title: cleanQuestionString(exam.Question_Title),
-                    isMCQ: exam.Question_Type === 'MCQ',
-                    isMultiple_Select_MCQ: exam.Question_Type === 'Multiple Select MCQ',
-                    isFreeEnd: exam.Question_Type === 'Free End',
-                    questionOptions: questionOptions.map((option, index) => ({
-                        value: option,
-                        label: `Option ${String.fromCharCode(65 + index)}`
-                    })),
-                    correctAnswer: exam.Correct_Answer ? exam.Correct_Answer.split(',') : [],
-                    selectedOption: null,
-                    selectedOptions: [],
-                    userAnswer: '',
-                    number: idx + 1
-                };
+    connectedCallback() {
+        // Fetch assigned questions using wire service
+        getAssignedQuestions()
+            .then(result => {
+                if (result && result.length > 0) {
+                    this.exams = result.map((exam, idx) => {
+                        const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
+                        return {
+                            ...exam,
+                            Question_Title: cleanQuestionString(exam.Question_Title),
+                            isMCQ: exam.Question_Type === 'MCQ',
+                            isMultiple_Select_MCQ: exam.Question_Type === 'Multiple Select MCQ',
+                            isFreeEnd: exam.Question_Type === 'Free End',
+                            questionOptions: questionOptions.map((option, index) => ({
+                                value: option,
+                                label: `Option ${String.fromCharCode(65 + index)}`
+                            })),
+                            correctAnswer: exam.Correct_Answer ? exam.Correct_Answer.split(',') : [],
+                            selectedOption: '', // Initialize with empty string
+                            selectedOptions: [],
+                            userAnswer: '',
+                            number: idx + 1
+                        };
+                    });
+                    this.examId = result[0].Id; // Set examId from the first exam (assuming result is not empty)
+                    this.error = undefined;
+                    // Check if the exam is already submitted
+                    this.checkIfSubmitted();
+                } else {
+                    this.error = { message: 'No exams found.' }; // Handle scenario where no exams are returned
+                }
+            })
+            .catch(error => {
+                this.error = error;
+                this.exams = [];
             });
-            this.examId = data[0].Id; // Assuming you set examId from the first exam
-            this.error = undefined;
-        } else if (error) {
-            this.error = error;
-            this.exams = [];
-        }
+    }
 
-        console.log("Exams::" + JSON.stringify(this.exams));
+    // Method to check if exam is already submitted
+    async checkIfSubmitted() {
+        try {
+            if (this.examId) {
+                const result = await isAnswerSubmitted({ examId: this.examId });
+                console.log("submitted response:::" + JSON.stringify(result));
+                if (result === true) {
+                    console.log("Exam already submitted");
+                    this.loadCandidateResponse(); // Fetch userAnswers if exam is submitted
+                    this.isSubmitted = true;
+                    console.log("submitted");
+                }
+            } else {
+                console.warn('ExamId is undefined.'); // Handle scenario where examId is undefined
+            }
+        } catch (error) {
+            console.error('Error checking if exam is submitted:', JSON.stringify(error));
+            this.showToast("Error", "Failed to check if exam is submitted", "error");
+        }
+    }
+
+    // Method to load candidate response if exam is already submitted
+    loadCandidateResponse() {
+        console.log("ExamiD::::" + this.examId);
+        getCandidateResponse({ examId: this.examId })
+            .then(result => {
+                const parsedResult = JSON.parse(result);
+                this.userAnswers = parsedResult;
+                this.updateAnswerStyles();
+            })
+            .catch(error => {
+                console.error('Error loading candidate response', JSON.stringify(error));
+                this.showToast("Error", "Failed to load candidate response", "error");
+            });
     }
 
     // Handle radio button or checkbox option change
@@ -88,7 +131,7 @@ export default class ExamComponent extends LightningElement {
             questionId: exam.QuestionId,
             questionNumber: exam.number,
             answer: exam.isMCQ
-                ? exam.questionOptions.find(opt => opt.value === exam.selectedOption)?.label
+                ? exam.questionOptions.find(opt => opt.value === exam.selectedOption)?.label || '' // Use empty string if not attempted
                 : exam.isMultiple_Select_MCQ
                     ? exam.selectedOptions
                         .map(option => exam.questionOptions.find(opt => opt.value === option)?.label)
@@ -99,52 +142,56 @@ export default class ExamComponent extends LightningElement {
 
         this.calculateMarks();
 
-        // Save candidate response
-        saveCandidateResponse({ userAnswers: JSON.stringify(this.userAnswers), examId: this.examId })
-            .then(result => {
-                saveObtainedMarks({ obtainedMarks: this.obtainedMarks }).then(result => {
-                    console.log('Answers submitted successfully:', result);
-                    this.showModal = true; // Show modal after submission
-                    this.updateAnswerStyles(); // Update answer styles after submission
-                    this.isSubmitted = true;
-                }).catch(error => {
-                    this.showToast("Error", error.message, "error");
-                    console.error('Error submitting answers:', error.message);
+        if (this.isSubmitted) {
+            this.showToast("Error", "Answer already submitted", "error");
+        } else {
+            // Save candidate response
+            saveCandidateResponse({ userAnswers: JSON.stringify(this.userAnswers), examId: this.examId })
+                .then(result => {
+                    saveObtainedMarks({ obtainedMarks: this.obtainedMarks }).then(result => {
+                        console.log('Answers submitted successfully:', result);
+                        this.showModal = true; // Show modal after submission
+                        this.updateAnswerStyles(); // Update answer styles after submission
+                        this.isSubmitted = true;
+                    }).catch(error => {
+                        this.showToast("Error", error.message, "error");
+                        console.error('Error submitting answers:', error.message);
+                    });
+
+                })
+                .catch(error => {
+                    this.showToast("Error", "Exam Failed to submit", "error");
+                    console.error('Error submitting answers:', error);
                 });
-                // Mark as submitted
-            })
-            .catch(error => {
-                this.showToast("Error", "Exam Failed to submit", "error");
-                console.error('Error submitting answers:', error);
-            });
+        }
     }
 
     // Calculate obtained marks for MCQ and Multiple Select questions
     calculateMarks() {
         this.obtainedMarks = 0.0; // Initialize obtainedMarks to 0
-        console.log("Calculating marks::");
+
+        const totalQuestions = this.exams.length;
+        const marksPerQuestion = 100.0 / totalQuestions; // Calculate marks per question
+
         this.userAnswers.forEach(userAnswer => {
             // Find the corresponding exam for the current user answer
             const exam = this.exams.find(ex => ex.QuestionId === userAnswer.questionId);
             if (exam) {
-                // Compare userAnswer with correctAnswer
                 if (exam.isMCQ) {
                     // For MCQ, check if the selected option is correct
                     if (userAnswer.answer === exam.correctAnswer[0]) {
-                        this.obtainedMarks += 10.0; // Add 10 marks for correct MCQ
+                        this.obtainedMarks += marksPerQuestion; // Add full marks for correct MCQ
                     }
                 } else if (exam.isMultiple_Select_MCQ) {
-                    // For Multiple Select MCQ, compare sorted answers
-                    const correctAnswer = exam.correctAnswer.sort().join(', ');
-                    const userAnswerFormatted = userAnswer.answer.split(',').map(opt => opt.trim()).sort().join(', ');
-                    if (userAnswerFormatted === correctAnswer) {
-                        this.obtainedMarks += 10.0; // Add 10 marks for correct Multiple Select MCQ
-                    }
+                    // For Multiple Select MCQ, calculate partial marks
+                    const correctAnswers = exam.correctAnswer.length;
+                    const userCorrectAnswers = userAnswer.answer.split(', ').filter(answer => exam.correctAnswer.includes(answer)).length;
+
+                    const partialMarks = (userCorrectAnswers / correctAnswers) * marksPerQuestion;
+                    this.obtainedMarks += partialMarks; // Add partial marks based on correct selections
                 }
             }
         });
-
-        console.log("Total obtained marks:", this.obtainedMarks); // Debugging output
     }
 
     // Update answer styles based on correctness
@@ -170,13 +217,14 @@ export default class ExamComponent extends LightningElement {
 
                     // Determine the option class based on selection and correctness
                     let optionClass = 'default-option';
-
                     if (isSelected) {
                         if (isCorrect) {
                             optionClass = 'correct-answer'; // User selected the correct answer
                         } else {
                             optionClass = 'incorrect-answer'; // User selected the incorrect answer
                         }
+                    } else if (userAnswer === '' && isCorrect) {
+                        optionClass = 'unattempted-correct-answer'; // Highlight correct answers not selected by the user in yellow
                     } else if (isCorrect) {
                         optionClass = 'correct-answer'; // Highlight correct answers not selected by the user
                     }
@@ -201,6 +249,7 @@ export default class ExamComponent extends LightningElement {
         this.showModal = false;
     }
 
+    // Show toast message
     showToast(title, message, variant) {
         const event = new ShowToastEvent({
             title,
@@ -213,7 +262,6 @@ export default class ExamComponent extends LightningElement {
 
 // Function to clean HTML strings (optional)
 function cleanQuestionString(question) {
-    const tempElement = document.createElement('div');
-    tempElement.innerHTML = question;
-    return tempElement.textContent || tempElement.innerText || '';
+    // Replace any HTML tags from the question title
+    return question.replace(/(<([^>]+)>)/gi, "");
 }
