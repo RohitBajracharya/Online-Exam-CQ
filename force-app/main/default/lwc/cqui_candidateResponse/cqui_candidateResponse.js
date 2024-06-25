@@ -1,4 +1,5 @@
 import { LightningElement, wire, track } from 'lwc';
+import { NavigationMixin } from 'lightning/navigation';
 import getExamData from '@salesforce/apex/SQX_candidateResponseController.getExamData';
 import { refreshApex } from '@salesforce/apex';
 
@@ -13,14 +14,16 @@ const columns = [
         typeAttributes: {
             label: 'View Details',
             name: 'view_details',
-            title: 'Click to View Details'
+            title: 'Click to View Details',
+            variant: 'brand',
+            target: '_self'
         }
     }
 ];
 
-export default class CandidateResponse extends LightningElement {
+export default class CandidateResponse extends NavigationMixin(LightningElement) {
     @track data = [];
-    columns = columns;
+    @track columns = columns;
 
     @wire(getExamData)
     wiredExams(result) {
@@ -54,7 +57,14 @@ export default class CandidateResponse extends LightningElement {
 
     handleViewDetails(row) {
         console.log('View details for:', row);
-        // Implement logic to navigate to a detailed view or show details in a modal here
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordPage',
+            attributes: {
+                recordId: row.id,
+                objectApiName: 'SQX_Candidate_Response__c', // Replace with your object API name
+                actionName: 'view'
+            }
+        });
     }
 
     handleSave(event) {
