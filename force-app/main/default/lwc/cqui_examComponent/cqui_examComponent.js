@@ -16,6 +16,7 @@ export default class ExamComponent extends LightningElement {
     examId;
 
     connectedCallback() {
+
         // Fetch assigned questions using wire service
         getAssignedQuestions()
             .then(result => {
@@ -80,7 +81,9 @@ export default class ExamComponent extends LightningElement {
         getCandidateResponse({ examId: this.examId })
             .then(result => {
                 const parsedResult = JSON.parse(result);
+                console.log("parsedResult:::" + JSON.stringify(parsedResult));
                 this.userAnswers = parsedResult;
+                console.log("userAnswers:::" + JSON.stringify(this.userAnswers));
                 this.updateAnswerStyles();
             })
             .catch(error => {
@@ -201,16 +204,20 @@ export default class ExamComponent extends LightningElement {
             map[userAnswer.questionNumber] = userAnswer.answer;
             return map;
         }, {});
+        console.log("userAnswersMap:::" + JSON.stringify(userAnswersMap));
 
-        // Update the exams array with proper option classes
+        // Update the exams array with proper option classes and user answers
         this.exams = this.exams.map(exam => {
+            const userAnswer = userAnswersMap[exam.number];
+            console.log("userAnswer:::" + JSON.stringify(userAnswer));
+
             if (exam.isMCQ || exam.isMultiple_Select_MCQ) {
+                // Update options with classes for MCQ and Multiple Select MCQ
                 exam.questionOptions = exam.questionOptions.map(option => {
                     // Determine if this option is the correct answer
-                    const isCorrect = exam.correctAnswer.includes(option.label); // correctAnswer stores labels like 'Option B'
+                    const isCorrect = exam.correctAnswer.includes(option.label);
 
                     // Determine if the user selected this option
-                    const userAnswer = userAnswersMap[exam.number];
                     const isSelected = exam.isMCQ
                         ? userAnswer === option.label
                         : userAnswer.split(', ').includes(option.label); // Handle multiple selections
@@ -218,15 +225,11 @@ export default class ExamComponent extends LightningElement {
                     // Determine the option class based on selection and correctness
                     let optionClass = 'default-option';
                     if (isSelected) {
-                        if (isCorrect) {
-                            optionClass = 'correct-answer'; // User selected the correct answer
-                        } else {
-                            optionClass = 'incorrect-answer'; // User selected the incorrect answer
-                        }
+                        optionClass = isCorrect ? 'correct-answer' : 'incorrect-answer';
                     } else if (userAnswer === '' && isCorrect) {
-                        optionClass = 'unattempted-correct-answer'; // Highlight correct answers not selected by the user in yellow
+                        optionClass = 'unattempted-correct-answer';
                     } else if (isCorrect) {
-                        optionClass = 'correct-answer'; // Highlight correct answers not selected by the user
+                        optionClass = 'correct-answer';
                     }
 
                     return {
@@ -234,10 +237,16 @@ export default class ExamComponent extends LightningElement {
                         optionClass
                     };
                 });
+            } else if (exam.isFreeEnd) {
+
+                exam.userAnswer = userAnswer;
+
             }
+
             return exam;
         });
     }
+
 
     // Getter to return exams with updated styles
     get numberedExams() {
