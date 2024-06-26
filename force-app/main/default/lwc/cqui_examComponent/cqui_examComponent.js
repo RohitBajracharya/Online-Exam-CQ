@@ -1,12 +1,14 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_examController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_examController.getCandidateResponse';
+import getExamId from '@salesforce/apex/SQX_examController.getExamId';
+import getFullMarks from '@salesforce/apex/SQX_examController.getFullMarks';
 import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmitted';
 import saveCandidateResponse from '@salesforce/apex/SQX_examController.saveCandidateResponse';
 import saveObtainedMarks from '@salesforce/apex/SQX_examController.saveObtainedMarks';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { LightningElement, track } from 'lwc';
-
 export default class ExamComponent extends LightningElement {
+
     @track exams = [];
     @track error;
     @track userAnswers = [];
@@ -14,13 +16,21 @@ export default class ExamComponent extends LightningElement {
     @track showModal = false; // Track modal visibility
     obtainedMarks = 0; // Track obtained marks
     examId;
+    setName = '';
+    fullMarks = '';
+    passMarks = '';
+    examFinished = false;
+    remainingTime;
 
-    connectedCallback() {
-
+    async connectedCallback() {
         // Fetch assigned questions using wire service
         getAssignedQuestions()
             .then(result => {
                 if (result && result.length > 0) {
+                    this.setName = result[0].Set_Name;
+                    this.fullMarks = result[0].Full_Marks;
+                    this.passMarks = result[0].Pass_Marks;
+
                     this.exams = result.map((exam, idx) => {
                         const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
                         return {
@@ -52,19 +62,33 @@ export default class ExamComponent extends LightningElement {
                 this.error = error;
                 this.exams = [];
             });
+        try {
+            const examId = await getExamId();
+            try {
+                const answerSubmitted = await isAnswerSubmitted({ examId: examId });
+                if (answerSubmitted) {
+                    this.examFinished = true;
+                } else {
+                    this.examFinished = false;
+                }
+            } catch (error) {
+                console.error("Error fetching answerSubmitted::: " + JSON.stringify(error));
+            }
+        } catch (error) {
+            console.error("Error fetching examId::: " + JSON.stringify(error));
+        }
+
     }
+
 
     // Method to check if exam is already submitted
     async checkIfSubmitted() {
         try {
             if (this.examId) {
                 const result = await isAnswerSubmitted({ examId: this.examId });
-                console.log("submitted response:::" + JSON.stringify(result));
                 if (result === true) {
-                    console.log("Exam already submitted");
                     this.loadCandidateResponse(); // Fetch userAnswers if exam is submitted
                     this.isSubmitted = true;
-                    console.log("submitted");
                 }
             } else {
                 console.warn('ExamId is undefined.'); // Handle scenario where examId is undefined
@@ -77,13 +101,10 @@ export default class ExamComponent extends LightningElement {
 
     // Method to load candidate response if exam is already submitted
     loadCandidateResponse() {
-        console.log("ExamiD::::" + this.examId);
         getCandidateResponse({ examId: this.examId })
             .then(result => {
                 const parsedResult = JSON.parse(result);
-                console.log("parsedResult:::" + JSON.stringify(parsedResult));
                 this.userAnswers = parsedResult;
-                console.log("userAnswers:::" + JSON.stringify(this.userAnswers));
                 this.updateAnswerStyles();
             })
             .catch(error => {
@@ -152,8 +173,8 @@ export default class ExamComponent extends LightningElement {
             saveCandidateResponse({ userAnswers: JSON.stringify(this.userAnswers), examId: this.examId })
                 .then(result => {
                     saveObtainedMarks({ obtainedMarks: this.obtainedMarks }).then(result => {
-                        console.log('Answers submitted successfully:', result);
                         this.showModal = true; // Show modal after submission
+                        this.remainingTime = "0";
                         this.updateAnswerStyles(); // Update answer styles after submission
                         this.isSubmitted = true;
                     }).catch(error => {
@@ -170,31 +191,37 @@ export default class ExamComponent extends LightningElement {
     }
 
     // Calculate obtained marks for MCQ and Multiple Select questions
-    calculateMarks() {
-        this.obtainedMarks = 0.0; // Initialize obtainedMarks to 0
+    async calculateMarks() {
+        this.obtainedMarks = 0.0;
+        try {
+            const totalMarks = await getFullMarks({ examId: this.examId });
+            const totalQuestions = this.exams.length;
+            const marksPerQuestion = totalMarks / totalQuestions; // Calculate marks per question
 
-        const totalQuestions = this.exams.length;
-        const marksPerQuestion = 100.0 / totalQuestions; // Calculate marks per question
+            this.userAnswers.forEach(userAnswer => {
+                // Find the corresponding exam for the current user answer
+                const exam = this.exams.find(ex => ex.QuestionId === userAnswer.questionId);
+                if (exam) {
+                    if (exam.isMCQ) {
+                        // For MCQ, check if the selected option is correct
+                        if (userAnswer.answer === exam.correctAnswer[0]) {
+                            this.obtainedMarks += marksPerQuestion; // Add full marks for correct MCQ
+                        }
+                    } else if (exam.isMultiple_Select_MCQ) {
+                        // For Multiple Select MCQ, calculate partial marks
+                        const correctAnswers = exam.correctAnswer.length;
+                        const userCorrectAnswers = userAnswer.answer.split(', ').filter(answer => exam.correctAnswer.includes(answer)).length;
 
-        this.userAnswers.forEach(userAnswer => {
-            // Find the corresponding exam for the current user answer
-            const exam = this.exams.find(ex => ex.QuestionId === userAnswer.questionId);
-            if (exam) {
-                if (exam.isMCQ) {
-                    // For MCQ, check if the selected option is correct
-                    if (userAnswer.answer === exam.correctAnswer[0]) {
-                        this.obtainedMarks += marksPerQuestion; // Add full marks for correct MCQ
+                        const partialMarks = (userCorrectAnswers / correctAnswers) * marksPerQuestion;
+                        this.obtainedMarks += partialMarks; // Add partial marks based on correct selections
                     }
-                } else if (exam.isMultiple_Select_MCQ) {
-                    // For Multiple Select MCQ, calculate partial marks
-                    const correctAnswers = exam.correctAnswer.length;
-                    const userCorrectAnswers = userAnswer.answer.split(', ').filter(answer => exam.correctAnswer.includes(answer)).length;
-
-                    const partialMarks = (userCorrectAnswers / correctAnswers) * marksPerQuestion;
-                    this.obtainedMarks += partialMarks; // Add partial marks based on correct selections
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error("Error while fetching total marks:: " + JSON.stringify(error));
+        }
+
+
     }
 
     // Update answer styles based on correctness
@@ -204,12 +231,10 @@ export default class ExamComponent extends LightningElement {
             map[userAnswer.questionNumber] = userAnswer.answer;
             return map;
         }, {});
-        console.log("userAnswersMap:::" + JSON.stringify(userAnswersMap));
 
         // Update the exams array with proper option classes and user answers
         this.exams = this.exams.map(exam => {
             const userAnswer = userAnswersMap[exam.number];
-            console.log("userAnswer:::" + JSON.stringify(userAnswer));
 
             if (exam.isMCQ || exam.isMultiple_Select_MCQ) {
                 // Update options with classes for MCQ and Multiple Select MCQ
@@ -238,11 +263,8 @@ export default class ExamComponent extends LightningElement {
                     };
                 });
             } else if (exam.isFreeEnd) {
-
                 exam.userAnswer = userAnswer;
-
             }
-
             return exam;
         });
     }
@@ -267,6 +289,15 @@ export default class ExamComponent extends LightningElement {
         });
         this.dispatchEvent(event);
     }
+
+    get passStatus() {
+        if (this.obtainedMarks > this.passMarks)
+            return true;
+        else
+            return false;
+    }
+
+
 }
 
 // Function to clean HTML strings (optional)
