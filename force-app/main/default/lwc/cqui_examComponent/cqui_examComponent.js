@@ -1,5 +1,6 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_examController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_examController.getCandidateResponse';
+import getExamId from '@salesforce/apex/SQX_examController.getExamId';
 import getFullMarks from '@salesforce/apex/SQX_examController.getFullMarks';
 import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmitted';
 import saveCandidateResponse from '@salesforce/apex/SQX_examController.saveCandidateResponse';
@@ -7,6 +8,7 @@ import saveObtainedMarks from '@salesforce/apex/SQX_examController.saveObtainedM
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { LightningElement, track } from 'lwc';
 export default class ExamComponent extends LightningElement {
+
     @track exams = [];
     @track error;
     @track userAnswers = [];
@@ -15,10 +17,12 @@ export default class ExamComponent extends LightningElement {
     obtainedMarks = 0; // Track obtained marks
     examId;
     setName = '';
-    fullMarks = ''; 
+    fullMarks = '';
     passMarks = '';
-    connectedCallback() {
+    examFinished = false;
+    remainingTime;
 
+    async connectedCallback() {
         // Fetch assigned questions using wire service
         getAssignedQuestions()
             .then(result => {
@@ -58,7 +62,24 @@ export default class ExamComponent extends LightningElement {
                 this.error = error;
                 this.exams = [];
             });
+        try {
+            const examId = await getExamId();
+            try {
+                const answerSubmitted = await isAnswerSubmitted({ examId: examId });
+                if (answerSubmitted) {
+                    this.examFinished = true;
+                } else {
+                    this.examFinished = false;
+                }
+            } catch (error) {
+                console.error("Error fetching answerSubmitted::: " + JSON.stringify(error));
+            }
+        } catch (error) {
+            console.error("Error fetching examId::: " + JSON.stringify(error));
+        }
+
     }
+
 
     // Method to check if exam is already submitted
     async checkIfSubmitted() {
@@ -152,9 +173,8 @@ export default class ExamComponent extends LightningElement {
             saveCandidateResponse({ userAnswers: JSON.stringify(this.userAnswers), examId: this.examId })
                 .then(result => {
                     saveObtainedMarks({ obtainedMarks: this.obtainedMarks }).then(result => {
-                        this.finishExam();
                         this.showModal = true; // Show modal after submission
-
+                        this.remainingTime = "0";
                         this.updateAnswerStyles(); // Update answer styles after submission
                         this.isSubmitted = true;
                     }).catch(error => {
@@ -175,7 +195,6 @@ export default class ExamComponent extends LightningElement {
         this.obtainedMarks = 0.0;
         try {
             const totalMarks = await getFullMarks({ examId: this.examId });
-            console.log("totalmarks::: " + JSON.stringify(totalMarks));
             const totalQuestions = this.exams.length;
             const marksPerQuestion = totalMarks / totalQuestions; // Calculate marks per question
 
@@ -259,7 +278,6 @@ export default class ExamComponent extends LightningElement {
     // Method to close the modal
     handleCloseModal() {
         this.showModal = false;
-        window.location.reload();
     }
 
     // Show toast message
@@ -271,13 +289,14 @@ export default class ExamComponent extends LightningElement {
         });
         this.dispatchEvent(event);
     }
-    finishExam() {
-        console.log("Exam finished");
-        const examFinishedEvent = new CustomEvent('examfinished', {
-            detail: { isFinished: true }
-        });
-        this.dispatchEvent(examFinishedEvent);
+
+    get passStatus() {
+        if (this.obtainedMarks > this.passMarks)
+            return true;
+        else
+            return false;
     }
+
 
 }
 

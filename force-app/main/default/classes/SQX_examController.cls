@@ -168,5 +168,13 @@ public with sharing class SQX_examController {
         }
         return fullMarks;
    }
+
+   @AuraEnabled
+   public static void updateExamStatusToOngoing(Id examId){
+    Id currentUserId = UserInfo.getUserId();
+    SQX_Exam__c examRecord=[Select Id,SQX_Status__c from SQX_Exam__c where SQX_Assign_To__c=:currentUserId and Id=:examId];
+    examRecord.SQX_Status__c='Ongoing';
+    update examRecord;
+   }
 }
 
