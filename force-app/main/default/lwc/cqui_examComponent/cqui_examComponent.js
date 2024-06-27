@@ -21,6 +21,7 @@ export default class ExamComponent extends LightningElement {
     passMarks = '';
     examFinished = false;
     remainingTime;
+    displayResult;
 
     async connectedCallback() {
         // Fetch assigned questions using wire service
@@ -30,7 +31,7 @@ export default class ExamComponent extends LightningElement {
                     this.setName = result[0].Set_Name;
                     this.fullMarks = result[0].Full_Marks;
                     this.passMarks = result[0].Pass_Marks;
-
+                    this.displayResult = result[0].Display_Result;
                     this.exams = result.map((exam, idx) => {
                         const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
                         return {
@@ -47,7 +48,9 @@ export default class ExamComponent extends LightningElement {
                             selectedOption: '', // Initialize with empty string
                             selectedOptions: [],
                             userAnswer: '',
-                            number: idx + 1
+                            number: idx + 1,
+
+
                         };
                     });
                     this.examId = result[0].Id; // Set examId from the first exam (assuming result is not empty)
@@ -249,13 +252,16 @@ export default class ExamComponent extends LightningElement {
 
                     // Determine the option class based on selection and correctness
                     let optionClass = 'default-option';
-                    if (isSelected) {
-                        optionClass = isCorrect ? 'correct-answer' : 'incorrect-answer';
-                    } else if (userAnswer === '' && isCorrect) {
-                        optionClass = 'unattempted-correct-answer';
-                    } else if (isCorrect) {
-                        optionClass = 'correct-answer';
+                    if (this.displayResult == "Show result after submission") {
+                        if (isSelected) {
+                            optionClass = isCorrect ? 'correct-answer' : 'incorrect-answer';
+                        } else if (userAnswer === '' && isCorrect) {
+                            optionClass = 'unattempted-correct-answer';
+                        } else if (isCorrect) {
+                            optionClass = 'correct-answer';
+                        }
                     }
+
 
                     return {
                         ...option,
@@ -263,7 +269,11 @@ export default class ExamComponent extends LightningElement {
                     };
                 });
             } else if (exam.isFreeEnd) {
-                exam.userAnswer = userAnswer;
+                if (this.displayResult == "Show result after submission") {
+                    exam.userAnswer = userAnswer;
+                } else {
+                    exam.userAnswer = '';
+                }
             }
             return exam;
         });
@@ -295,6 +305,14 @@ export default class ExamComponent extends LightningElement {
             return true;
         else
             return false;
+    }
+
+    get doDisplayResult() {
+        if (this.displayResult = "Don't show result after submission") {
+            return false;
+        } else if (this.displayResult = "Show result after submission") {
+            return true;
+        }
     }
 
 
