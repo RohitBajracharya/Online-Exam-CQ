@@ -11,31 +11,21 @@ public with sharing class SQX_examController {
        // Query to fetch question set IDs assigned to the user
        system.debug('todayyyyyyyyyyyyyy--------------------------------------------------'+ today);
         List<SQX_Exam__c> examRecords = [
-            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Date__c
+            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId
         ];
-        system.debug('exam----------------------------------------------'+examRecords);
-        if (examRecords.isEmpty()) {
-            return exams; // Return empty list if no exams for today
-        }
-
-        List<SQX_Exam__c> filteredExams = new List<SQX_Exam__c>();
-        for (SQX_Exam__c exam : examRecords) {
-            system.debug('date----------------------------------------------'+exam.SQX_Date__c.date());
-            if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
-                filteredExams.add(exam);
-            }
-        }
-
-        system.debug('filteredexam----------------------------------------------'+filteredExams);
+        System.debug('examRecords:::::::'+examRecords);
+ 
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
-        for (SQX_Exam__c exam : filteredExams) {
+        Map<Id, String> setDisplayResultMap = new Map<Id, String>();
+        for (SQX_Exam__c exam : examRecords) {
             setIds.add(exam.SQX_Set__c);
             setFullMarksMap.put(exam.SQX_Set__c, exam.SQX_Full_Marks__c);
             setPassMarksMap.put(exam.SQX_Set__c, exam.SQX_Pass_Marks__c);
+            setDisplayResultMap.put(exam.SQX_Set__c, exam.SQX_Display_Result__c);
             examId=exam.Id;
         }
  
@@ -59,17 +49,15 @@ public with sharing class SQX_examController {
                 questionMap.put('Question_Title', questionSet.SQX_Question__r.SQX_Title__c);
                 questionMap.put('Question_Type', questionSet.SQX_Question__r.SQX_Type__c);
                 questionMap.put('Correct_Answer',questionSet.SQX_Question__r.SQX_Correct_Answer__c);
-                questionMap.put('Full_Marks', filteredExams[0].SQX_Full_Marks__c);
-                questionMap.put('Pass_Marks', filteredExams[0].SQX_Pass_Marks__c);
+                questionMap.put('Full_Marks', examRecords[0].SQX_Full_Marks__c);
+                questionMap.put('Pass_Marks', examRecords[0].SQX_Pass_Marks__c);
+                questionMap.put('Display_Result',examRecords[0].SQX_Display_Result__c);
  
    
                 if (questionSet.SQX_Question__r.SQX_Type__c == 'MCQ' || questionSet.SQX_Question__r.SQX_Type__c == 'Multiple Select MCQ') {
                     questionMap.put('Question_Options', questionSet.SQX_Question__r.SQX_Options__c);
-                    // questionMap.put('Question_Answer', questionSet.SQX_Question__r.SQX_Answer__c);
                 }
-                 //  else if (questionSet.SQX_Question__r.SQX_Type__c == 'Free-End') {
-                //     questionMap.put('Question_Answer', questionSet.SQX_Question__r.SQX_Answer__c);
-                // Multiple Select MCQ}
+               
                 //Ensures that Full_Marks and Pass_Marks are associated correctly with each question set (SQX_Set__c) based on the mappings from SQX_Exam__c records.
                 if (setFullMarksMap.containsKey(questionSet.SQX_Set__c)) {
                     questionMap.put('Full_Marks', setFullMarksMap.get(questionSet.SQX_Set__c));
@@ -78,6 +66,8 @@ public with sharing class SQX_examController {
                 if (setPassMarksMap.containsKey(questionSet.SQX_Set__c)) {
                     questionMap.put('Pass_Marks', setPassMarksMap.get(questionSet.SQX_Set__c));
                 }
+
+               
    
                 exams.add(questionMap);
             }
