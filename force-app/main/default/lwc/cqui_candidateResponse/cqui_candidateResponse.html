@@ -1,13 +1,14 @@
 <template>
-    <lightning-card title="Candidate Response">
-        <div class="slds-p-around_medium">
-            <lightning-datatable
-                key-field="Id"
-                data={data}
-                columns={columns}
-                onrowaction={handleRowAction}
-                hide-checkbox-column="true">
-            </lightning-datatable>
-        </div>
-    </lightning-card>
+    <lightning-datatable
+        key-field="id"
+        data={data}
+        columns={columns}
+        draft-values={draftValues}
+        onsave={handleSave}
+        oncellchange={handleCellChange}
+        onsort={handleSort}
+        onrowaction={handleRowAction}
+        hide-checkbox-column="true"
+        show-row-number-column>
+    </lightning-datatable>
 </template>
