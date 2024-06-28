@@ -4,18 +4,35 @@ public with sharing class SQX_examController {
         List<Map<String, Object>> exams = new List<Map<String, Object>>();
         Id currentUserId = UserInfo.getUserId();
         Id examId;
- 
+        
+        // Get today's date
+        Date today = Date.today();
+
        // Query to fetch question set IDs assigned to the user
+       system.debug('todayyyyyyyyyyyyyy--------------------------------------------------'+ today);
         List<SQX_Exam__c> examRecords = [
-            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c
+            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Date__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId
         ];
- 
+        system.debug('exam----------------------------------------------'+examRecords);
+        if (examRecords.isEmpty()) {
+            return exams; // Return empty list if no exams for today
+        }
+
+        List<SQX_Exam__c> filteredExams = new List<SQX_Exam__c>();
+        for (SQX_Exam__c exam : examRecords) {
+            system.debug('date----------------------------------------------'+exam.SQX_Date__c.date());
+            if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
+                filteredExams.add(exam);
+            }
+        }
+
+        system.debug('filteredexam----------------------------------------------'+filteredExams);
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
-        for (SQX_Exam__c exam : examRecords) {
+        for (SQX_Exam__c exam : filteredExams) {
             setIds.add(exam.SQX_Set__c);
             setFullMarksMap.put(exam.SQX_Set__c, exam.SQX_Full_Marks__c);
             setPassMarksMap.put(exam.SQX_Set__c, exam.SQX_Pass_Marks__c);
@@ -42,8 +59,8 @@ public with sharing class SQX_examController {
                 questionMap.put('Question_Title', questionSet.SQX_Question__r.SQX_Title__c);
                 questionMap.put('Question_Type', questionSet.SQX_Question__r.SQX_Type__c);
                 questionMap.put('Correct_Answer',questionSet.SQX_Question__r.SQX_Correct_Answer__c);
-                questionMap.put('Full_Marks', examRecords[0].SQX_Full_Marks__c);
-                questionMap.put('Pass_Marks', examRecords[0].SQX_Pass_Marks__c);
+                questionMap.put('Full_Marks', filteredExams[0].SQX_Full_Marks__c);
+                questionMap.put('Pass_Marks', filteredExams[0].SQX_Pass_Marks__c);
  
    
                 if (questionSet.SQX_Question__r.SQX_Type__c == 'MCQ' || questionSet.SQX_Question__r.SQX_Type__c == 'Multiple Select MCQ') {
@@ -67,17 +84,33 @@ public with sharing class SQX_examController {
         }
         return exams;
     }
+
     @AuraEnabled(cacheable=true)
     public static String getExamDuration() {
+        Date today = Date.today();
+
         Id currentUserId = UserInfo.getUserId();
-        SQX_Exam__c examRecord = [
-            SELECT SQX_Duration__c 
+        
+        List<SQX_Exam__c> examRecord = [
+            SELECT SQX_Duration__c,SQX_Date__c
             FROM SQX_Exam__c 
             WHERE SQX_Assign_To__c = :currentUserId 
-            LIMIT 1
+            
         ];
-        return examRecord.SQX_Duration__c;
+        String filteredDuration = '';
+    
+        for (SQX_Exam__c exam : examRecord) {
+            if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
+                filteredDuration = String.valueOf(exam.SQX_Duration__c);
+                break; // Exit loop once duration is found for today's exam
+            }
+        }
+        system.debug('filterduration---------------------------------------------------'+filteredDuration);
+        return filteredDuration;
     }
+    
+
+   
 
     @AuraEnabled
     public static void saveCandidateResponse(List<Map<String, Object>> userAnswers, String examId) {
