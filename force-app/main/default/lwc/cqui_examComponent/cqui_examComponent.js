@@ -23,15 +23,7 @@ export default class ExamComponent extends LightningElement {
     remainingTime;
     displayResult;
 
-<<<<<<< HEAD
-    // connectedCallback() loadCandidateResponseupdateAnswerStyles{
-        //
-
-    connectedCallback() {
-
-=======
     async connectedCallback() {
->>>>>>> 9e3dfa9c58d7b2b1446ee2c7b2f645a24b52dc9d
         // Fetch assigned questions using wire service
         getAssignedQuestions()
             .then(result => {
