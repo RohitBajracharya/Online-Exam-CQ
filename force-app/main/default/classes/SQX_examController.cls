@@ -11,17 +11,24 @@ public with sharing class SQX_examController {
        // Query to fetch question set IDs assigned to the user
        system.debug('todayyyyyyyyyyyyyy--------------------------------------------------'+ today);
         List<SQX_Exam__c> examRecords = [
-            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c
+            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c,SQX_Date__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId
         ];
+        List<SQX_Exam__C> filterExam= new List<SQX_Exam__C>(); 
+        for (SQX_Exam__c exam : examRecords) {
+            if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
+               filterExam.add(exam);
+            }
+        }
         System.debug('examRecords:::::::'+examRecords);
- 
+        
+
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
         Map<Id, String> setDisplayResultMap = new Map<Id, String>();
-        for (SQX_Exam__c exam : examRecords) {
+        for (SQX_Exam__c exam : filterExam) {
             setIds.add(exam.SQX_Set__c);
             setFullMarksMap.put(exam.SQX_Set__c, exam.SQX_Full_Marks__c);
             setPassMarksMap.put(exam.SQX_Set__c, exam.SQX_Pass_Marks__c);
