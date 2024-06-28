@@ -1,0 +1,54 @@
+<template>
+    <lightning-card>
+        <template if:true={exams}>
+            <!--question setName, total marks, pass marks-->
+            <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-p-around_medium">
+                <div class="slds-col slds-size_1-of-1 slds-text-align_center">
+                    <p class="slds-text-heading_large "><b>Set: '{setName}'</b></p>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-text-align_right">
+                    <p class="slds-text-heading_small"><b>Full Marks:</b> {fullMarks}</p>
+                    <p class="slds-text-heading_small"><b>Pass Marks:</b> {passMarks}</p>
+                </div>
+            </div>
+            <!--questions-->
+            <template for:each={numberedExams} for:item="exam">
+                <div key={exam.Id} class="slds-box slds-m-around_medium">
+                    <!--question title-->
+                    <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
+ 
+                    <!-- Single Choice Questions -->
+                    <template if:true={exam.isMCQ}>
+                        <p><strong>Options:</strong></p>
+                        <template for:each={exam.questionOptions} for:item="option">
+                            <div key={option.value} class={option.optionClass}>
+                                <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value}
+                                </p>
+                            </div>
+                        </template>
+                    </template>
+ 
+                    <!-- Multiple Choice Questions -->
+                    <template if:true={exam.isMultiple_Select_MCQ}>
+                        <p><strong>Options:</strong></p>
+                        <template for:each={exam.questionOptions} for:item="option">
+                            <div key={option.value} class={option.optionClass}>
+ 
+                                <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value}
+                                </p>
+                            </div>
+                        </template>
+                    </template>
+ 
+                    <!-- Free End Questions -->
+                    <template if:true={exam.isFreeEnd}>
+                        <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
+                    </template>
+                </div>
+            </template>
+        </template>
+        <template if:true={error}>
+            <p>{error.body.message}</p>
+        </template>
+    </lightning-card>
+</template>

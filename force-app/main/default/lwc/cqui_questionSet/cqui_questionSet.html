@@ -1,0 +1,95 @@
+<template>
+    <lightning-card title="Question List" icon-name="standard:code_set">
+        <div class="slds-m-around_large slds-grid slds-wrap">
+            <!-- setName dropdown -->
+            <div class="slds-col slds-size_1-of-4">
+                <lightning-combobox
+                    class="cq-combobox"
+                    name="sets"
+                    value={setName}
+                    label="Please select a set"
+                    placeholder="Please Select a Set"
+                    options={setPicklistValues}
+                    onchange={handleSetNameChange}
+                    required>
+                </lightning-combobox>
+            </div>
+            <div class="slds-col slds-size_2-of-4 slds-p-left_xx-large">
+                <lightning-input
+                    class="cq-search"
+                    type="search"
+                    label="Search"
+                    placeholder="Search Questions"
+                    value={searchTerm}
+                    onchange={handleSearchTermChange}>
+                </lightning-input>
+            </div>
+            <!-- create question set button -->
+            <div class="slds-col slds-size_1-of-4 slds-text-align_right slds-p-top_large">
+                <lightning-button
+                    if:true={isCreateButtonEnabled}  
+                    variant="success"
+                    label="Create Question Set"
+                    icon-name="action:follow"
+                    class="slds-m-left_x-small slds-text-heading_small"
+                    onclick={handleCreateQuestionSet}>
+                </lightning-button>
+                <!-- disabled button -->
+                <lightning-button
+                    if:false={isCreateButtonEnabled}
+                    variant="success"
+                    icon-name="action:follow"
+                    label="Create Question Set"
+                    disabled
+                    class="slds-m-left_x-small slds-text-heading_small">
+                </lightning-button>
+            </div>
+        </div>
+
+        <!-- table displaying questions with pagination -->
+        <div class="slds-m-around_medium">
+            <!-- datatable to display questions -->
+            <template if:true={displayedQuestions.length}>
+                <lightning-datatable
+                    class="slds-text-heading_small"
+                    data={displayedQuestions}
+                    columns={columns}
+                    selected-rows={allSelectedQuestionIds}
+                    key-field="Id"
+                    onrowselection={handleRowSelection}>
+                </lightning-datatable>
+            </template>
+            <!-- display message if no questions available -->
+            <template if:false={displayedQuestions.length}>
+                <lightning-datatable
+                    columns={columns}
+                    key-field="id">
+                </lightning-datatable>
+                <p class="slds-text-title_bold slds-text-title_caps slds-text-color_error slds-text-align_center">Unfortunately, questions are not available.</p>
+            </template>
+
+            <!-- pagination -->
+            <template if:true={isMoreThanOnePage}>
+                <div class="slds-m-around_medium pagination-controls slds-text-align_center">
+                    <lightning-button
+                        class="slds-text-heading_small"
+                        label="Previous"
+                        variant="brand"
+                        data-direction="previous"
+                        onclick={handlePageChange}
+                        disabled={isFirstPage}>
+                    </lightning-button>
+                    <span class="slds-m-horizontal_medium slds-text-heading_small">Page {page} of {totalPages}</span>
+                    <lightning-button
+                        class="slds-text-heading_small"
+                        label="Next"
+                        variant="brand"
+                        data-direction="next"
+                        onclick={handlePageChange}
+                        disabled={isLastPage}>
+                    </lightning-button>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

@@ -22,6 +22,8 @@ public with sharing class SQX_candidateResponseController {
     }
     
     public class ExamWrapper {
+        @AuraEnabledstats
+        public String id { get; set; }
         @AuraEnabled
         public String id { get; set; }
         @AuraEnabled

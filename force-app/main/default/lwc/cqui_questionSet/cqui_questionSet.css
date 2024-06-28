@@ -1,0 +1,4 @@
+.cq-combobox>div>.slds-form-element__label{
+    font-size: 8rem !important;
+    color: red;
+}

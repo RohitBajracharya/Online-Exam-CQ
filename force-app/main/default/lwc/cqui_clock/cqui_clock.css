@@ -1,0 +1,18 @@
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    overflow: hidden;
+}
+
+.time-remaining-text {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+.large-font {
+    font-size: 2rem; /* Adjust the font size as needed */
+    font-weight: bold; /* Optionally adjust the font weight */
+}
