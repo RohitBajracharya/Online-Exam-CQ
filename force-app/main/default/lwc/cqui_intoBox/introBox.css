@@ -51,3 +51,8 @@
     z-index: 1040;
     backdrop-filter: blur(10px); /* Apply a stronger blur */
 }
+.non-scrollable-container {
+    overflow: hidden; /* Ensures no scrolling */
+    height: 100%; /* Ensure it takes up full height, adjust as needed */
+    width: 100%; /* Ensure it takes up full width, adjust as needed */
+}
