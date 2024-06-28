@@ -15,6 +15,9 @@ export default class ExamComponent extends LightningElement {
     obtainedMarks = 0; // Track obtained marks
     examId;
 
+    // connectedCallback() loadCandidateResponseupdateAnswerStyles{
+        //
+
     connectedCallback() {
 
         // Fetch assigned questions using wire service

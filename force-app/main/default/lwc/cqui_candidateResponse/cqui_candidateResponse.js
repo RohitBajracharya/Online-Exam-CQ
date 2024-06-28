@@ -15,8 +15,7 @@ const columns = [
             label: 'View Details',
             name: 'view_details',
             title: 'Click to View Details',
-            variant: 'brand',
-            target: '_self'
+            variant: 'brand'
         }
     }
 ];
@@ -58,10 +57,10 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     handleViewDetails(row) {
         console.log('View details for:', row);
         this[NavigationMixin.Navigate]({
-            type: 'standard__recordPage',
+            type: 'standard__navItemPage',
             attributes: {
                 recordId: row.id,
-                objectApiName: 'SQX_Candidate_Response__c', // Replace with your object API name
+                apiName: 'Candidate_Result', // Replace with your object API name
                 actionName: 'view'
             }
         });
