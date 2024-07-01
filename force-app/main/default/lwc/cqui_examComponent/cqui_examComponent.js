@@ -6,7 +6,7 @@ import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmi
 import saveCandidateResponse from '@salesforce/apex/SQX_examController.saveCandidateResponse';
 import saveObtainedMarks from '@salesforce/apex/SQX_examController.saveObtainedMarks';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { LightningElement, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 export default class ExamComponent extends LightningElement {
 
     @track exams = [];
@@ -15,7 +15,7 @@ export default class ExamComponent extends LightningElement {
     @track isSubmitted = false; // Track if the exam has been submitted
     @track showModal = false; // Track modal visibility
     obtainedMarks = 0; // Track obtained marks
-    examId;
+    @api examId;
     setName = '';
     fullMarks = '';
     passMarks = '';
@@ -24,14 +24,17 @@ export default class ExamComponent extends LightningElement {
     displayResult;
 
     async connectedCallback() {
+        console.log("ExamId:::::: " + this.examId);
         // Fetch assigned questions using wire service
-        getAssignedQuestions()
+        getAssignedQuestions({ examId: this.examId })
             .then(result => {
+                console.log("result::::: " + JSON.stringify(result));
                 if (result && result.length > 0) {
                     this.setName = result[0].Set_Name;
                     this.fullMarks = result[0].Full_Marks;
                     this.passMarks = result[0].Pass_Marks;
                     this.displayResult = result[0].Display_Result;
+                    console.log("displayResult::::::: " + JSON.stringify(this.displayResult));
                     this.exams = result.map((exam, idx) => {
                         const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
                         return {
@@ -57,7 +60,7 @@ export default class ExamComponent extends LightningElement {
                     // Check if the exam is already submitted
                     this.checkIfSubmitted();
                 } else {
-                    this.error = { message: 'No exams found.' }; // Handle scenario where no exams are returned
+                    this.error = 'Currently there is no examination for you.'; // Handle scenario where no exams are returned
                 }
             })
             .catch(error => {
@@ -166,15 +169,16 @@ export default class ExamComponent extends LightningElement {
                     : exam.userAnswer || '___Didnt attempt___' // Store empty string if userAnswer is null
         }));
 
-        this.calculateMarks();
-
+        console.log("isSubmitted::: " + JSON.stringify(isAnswerSubmitted));
         if (this.isSubmitted) {
             this.showToast("Error", "Answer already submitted", "error");
         } else {
+            console.log("else");
+            this.calculateMarks();
             // Save candidate response
             saveCandidateResponse({ userAnswers: JSON.stringify(this.userAnswers), examId: this.examId })
                 .then(result => {
-                    saveObtainedMarks({ obtainedMarks: this.obtainedMarks }).then(result => {
+                    saveObtainedMarks({ obtainedMarks: this.obtainedMarks, examId: this.examId }).then(result => {
                         this.showModal = true; // Show modal after submission
                         this.remainingTime = "0";
                         this.updateAnswerStyles(); // Update answer styles after submission
@@ -227,6 +231,8 @@ export default class ExamComponent extends LightningElement {
 
     // Update answer styles based on correctness
     updateAnswerStyles() {
+        console.log("displaying here::::::: " + JSON.stringify(this.displayResult));
+
         // First, map the user answers to question IDs for easy lookup
         const userAnswersMap = this.userAnswers.reduce((map, userAnswer) => {
             map[userAnswer.questionNumber] = userAnswer.answer;
@@ -250,6 +256,7 @@ export default class ExamComponent extends LightningElement {
 
                     // Determine the option class based on selection and correctness
                     let optionClass = 'default-option';
+                    console.log("displaying ::::::: " + JSON.stringify(this.displayResult));
                     if (this.displayResult == "Show result after submission") {
                         if (isSelected) {
                             optionClass = isCorrect ? 'correct-answer' : 'incorrect-answer';
@@ -306,9 +313,9 @@ export default class ExamComponent extends LightningElement {
     }
 
     get doDisplayResult() {
-        if (this.displayResult = "Don't show result after submission") {
+        if (this.displayResult == "Don't show result after submission") {
             return false;
-        } else if (this.displayResult = "Show result after submission") {
+        } else if (this.displayResult == "Show result after submission") {
             return true;
         }
     }

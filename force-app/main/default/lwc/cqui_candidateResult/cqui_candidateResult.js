@@ -1,7 +1,7 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_RetrieveExamController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_RetrieveExamController.getCandidateResponse';
 
-import { LightningElement, track, api } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 
 export default class ExamComponent extends LightningElement {
     @track exams = [''];
@@ -97,7 +97,7 @@ export default class ExamComponent extends LightningElement {
         this.exams = filteredExams.map(exam => {
             const userAnswer = userAnswersMap[exam.number];
             console.log("userAnswer:::" + JSON.stringify(userAnswer));
-    
+
             if (exam.isMCQ || exam.isMultiple_Select_MCQ) {
                 exam.questionOptions = exam.questionOptions.map(option => {
                     const isCorrect = exam.correctAnswer.includes(option.label);
@@ -120,7 +120,7 @@ export default class ExamComponent extends LightningElement {
             } else if (exam.isFreeEnd) {
                 exam.userAnswer = userAnswer;
             }
-    
+
             return exam;
         });
     }

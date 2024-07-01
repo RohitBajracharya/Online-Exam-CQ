@@ -1,11 +1,8 @@
 public with sharing class SQX_questionSetController {
   
     @AuraEnabled(cacheable=true)
-    public static List<SQX_Set__c> getSetPicklistValues() {
-        System.debug('picklist');
-    
+    public static List<SQX_Set__c> getSetPicklistValues() {    
         List <SQX_Set__c> setName= [SELECT Id, SQX_Name__c FROM SQX_Set__c]; 
-        System.debug('setNME:::'+setName);
         return setName;
     }
     
