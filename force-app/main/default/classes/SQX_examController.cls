@@ -260,13 +260,14 @@ public with sharing class SQX_examController {
         List<SQX_Exam__c> examRecords = [
             SELECT Id,SQX_Date__c,SQX_Status__c
             FROM SQX_Exam__c
-            WHERE SQX_Assign_To__c = :currentUserId
+            WHERE SQX_Assign_To__c = :currentUserId and
+            SQX_Status__c='Scheduled'
         ];
         System.debug('examRecords:::::::'+examRecords);
         System.debug('today:::: '+today);
         for (SQX_Exam__c exam : examRecords) {
             System.debug('exam.SQX_Date__c.date()::::: '+exam.SQX_Date__c.date());
-            if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today && exam.SQX_Status__c=='Scheduled') {
+            if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
                anotherExam=true;
                break;
             }

@@ -83,11 +83,9 @@ export default class IntroBox extends LightningElement {
 
     }
     async startExam() {
-        const examId = await getExamId();
         try {
             try {
-                console.log("examid:::" + examId);
-                await updateExamStatusToOngoing({ examId: examId });
+                await updateExamStatusToOngoing({ examId: this.examination });
                 this.showModal = false;
                 this.isExamStarted = true;
                 localStorage.setItem('startTime', Math.floor(Date.now() / 1000).toString());

@@ -1,7 +1,7 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_RetrieveExamController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_RetrieveExamController.getCandidateResponse';
-import updateExamObjectApex from '@salesforce/apex/SQX_RetrieveExamController.updateExamObjectApex';
 import updateCandidateResponseApproval from '@salesforce/apex/SQX_RetrieveExamController.updateCandidateResponseApproval';
+import updateExamObjectApex from '@salesforce/apex/SQX_RetrieveExamController.updateExamObjectApex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 import { LightningElement, api, track } from 'lwc';
@@ -12,14 +12,15 @@ export default class ExamComponent extends LightningElement {
     @track userAnswers = [];
     @track isSubmitted = false;
     @track showModal = false;
-    @track editedFinalMarks = 0;
+    editedFinalMarks = 0;
     obtainedMarks = 0;
     examId;
     setName = '';
     fullMarks = '';
     passMarks = '';
     @api recordId;
-    
+    finalMarks;
+
     connectedCallback() {
         this.loadExamData()
             .then(() => this.loadCandidateResponse())
@@ -30,57 +31,55 @@ export default class ExamComponent extends LightningElement {
             });
     }
 
-    loadExamData() {
-        return getAssignedQuestions({ recordId: this.recordId })
-            .then(result => {
-                this.setName = result[0].Set_Name;
-                this.fullMarks = result[0].Full_Marks;
-                this.passMarks = result[0].Pass_Marks;
-                this.obtainedMarks = result[0].Obtained_Marks;
-                // console.log("result::: "+JSON.stringify(result));
-                if (result && result.length > 0) {
-                    this.exams = result.map((exam, idx) => {
-                        const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
-                        return {
-                            ...exam,
-                            Question_Title: cleanQuestionString(exam.Question_Title),
-                            isMCQ: exam.Question_Type === 'MCQ',
-                            isMultiple_Select_MCQ: exam.Question_Type === 'Multiple Select MCQ',
-                            isFreeEnd: exam.Question_Type === 'Free End',
-                            questionOptions: questionOptions.map((option, index) => ({
-                                value: option,
-                                label: `Option ${String.fromCharCode(65 + index)}`
-                            })),
-                            correctAnswer: exam.Correct_Answer ? exam.Correct_Answer.split(',') : [],
-                            selectedOption: '',
-                            selectedOptions: [],
-                            userAnswer: '',
-                            number: idx + 1
-                        };
-                    });
-                    this.examId = result[0].Id;
-                    this.error = undefined;
-                } else {
-                    this.error = { message: 'No exams found.' };
-                }
-            })
-            .catch(error => {
-                console.error("Error fetching questions:: " + JSON.stringify(error));
-                this.error = error;
-                this.exams = [];
-            });
+    async loadExamData() {
+        try {
+            const result = await getAssignedQuestions({ recordId: this.recordId });
+            this.setName = result[0].Set_Name;
+            this.fullMarks = result[0].Full_Marks;
+            this.passMarks = result[0].Pass_Marks;
+            this.obtainedMarks = result[0].Obtained_Marks;
+            // console.log("result::: "+JSON.stringify(result));
+            if (result && result.length > 0) {
+                this.exams = result.map((exam, idx) => {
+                    const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
+                    return {
+                        ...exam,
+                        Question_Title: cleanQuestionString(exam.Question_Title),
+                        isMCQ: exam.Question_Type === 'MCQ',
+                        isMultiple_Select_MCQ: exam.Question_Type === 'Multiple Select MCQ',
+                        isFreeEnd: exam.Question_Type === 'Free End',
+                        questionOptions: questionOptions.map((option, index) => ({
+                            value: option,
+                            label: `Option ${String.fromCharCode(65 + index)}`
+                        })),
+                        correctAnswer: exam.Correct_Answer ? exam.Correct_Answer.split(',') : [],
+                        selectedOption: '',
+                        selectedOptions: [],
+                        userAnswer: '',
+                        number: idx + 1
+                    };
+                });
+                this.examId = result[0].Id;
+                this.error = undefined;
+            } else {
+                this.error = { message: 'No exams found.' };
+            }
+        } catch (error) {
+            console.error("Error fetching questions:: " + JSON.stringify(error));
+            this.error = error;
+            this.exams = [];
+        }
     }
 
-    loadCandidateResponse() {
-        return getCandidateResponse({ recordId: this.recordId })
-            .then(result => {
-                console.log("Candidate result::: " + JSON.stringify(result));
-                const parsedResult = JSON.parse(result);
-                this.userAnswers = parsedResult;
-            })
-            .catch(error => {
-                console.error("Error fetching candidate response:: " + JSON.stringify(error));
-            });
+    async loadCandidateResponse() {
+        try {
+            const result = await getCandidateResponse({ recordId: this.recordId });
+            console.log("Candidate result::: " + JSON.stringify(result));
+            const parsedResult = JSON.parse(result);
+            this.userAnswers = parsedResult;
+        } catch (error) {
+            console.error("Error fetching candidate response:: " + JSON.stringify(error));
+        }
     }
 
     getExamOptionChecked(exam, option) {
@@ -97,9 +96,9 @@ export default class ExamComponent extends LightningElement {
             return map;
         }, {});
         console.log("userAnswersMap:::" + JSON.stringify(userAnswersMap));
-    
+
         const filteredExams = this.exams.filter(exam => userAnswersMap.hasOwnProperty(exam.number));
-    
+
         this.exams = filteredExams.map(exam => {
             const userAnswer = userAnswersMap[exam.number];
             console.log("userAnswer:::" + JSON.stringify(userAnswer));
@@ -143,52 +142,51 @@ export default class ExamComponent extends LightningElement {
     handleSubmit() {
         this.showModal = true;
     }
-
-    confirmSubmit() {
+    async confirmSubmit() {
         this.isSubmitted = true;
         this.showModal = false;
-        // Add your submit logic here
-        console.log('Submit confirmed',this.editedFinalMarks);
-        
-    
         // Update Exam object
-        updateExamObjectApex({ examId: this.examId, obtainedMarks: this.editedFinalMarks, responseId: this.recordId})
-        .then(result => {
-            console.log('Exam Object updated successfully'+this.editedFinalMarks);
-            
-            
+        await updateExamObjectApex({ examId: this.examId, obtainedMarks: this.editedFinalMarks, responseId: this.recordId })
+            .then(async result => {
+                if (result == 'success') {
+                    await updateCandidateResponseApproval({ responseId: this.recordId })
+                        .then(result => {
+                            if (result === 'Success') {
+                                console.log('Candidate Response updated successfully');
 
-            
-        })
-        .catch(error => {
-            console.error('Error updating Exam Object: ' + JSON.stringify(error));
-         
-        });
-
-        updateCandidateResponseApproval({ responseId: this.recordId })
-            .then(result => {
-                if (result === 'Success') {
-                    console.log('Candidate Response updated successfully');
-                    
-                    this.showToast('Success', 'Candidate Response updated successfully', 'success');
+                                this.showToast('Success', 'Candidate Response updated successfully', 'success');
+                                setTimeout(() => {
+                                    window.location.reload();
+                                }, 1500);
+                            } else {
+                                console.error('Validation Exception: ' + result);
+                                this.showToast('Error', result, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error updating Candidate Response: ' + JSON.stringify(error));
+                            this.showToast('Error', 'Error updating Candidate Response', 'error');
+                        });
                 } else {
-                    console.error('Validation Exception: ' + result);
-                    this.showToast('Error', result, 'error');
+                    this.showToast('Error', 'Final Obtained Marks is greater than total marks', 'error');
                 }
             })
             .catch(error => {
-                console.error('Error updating Candidate Response: ' + JSON.stringify(error));
-                this.showToast('Error', 'Error updating Candidate Response', 'error');
+                console.error('Error updating Exam Object: ' + JSON.stringify(error));
+
             });
+
+
     }
     showToast(title, message, variant) {
-            const event = new ShowToastEvent({
-                title: title,
-                message: message,
-                 variant: variant,
-            });
+        const event = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(event);
     }
-   
+
 }
 
 function cleanQuestionString(question) {

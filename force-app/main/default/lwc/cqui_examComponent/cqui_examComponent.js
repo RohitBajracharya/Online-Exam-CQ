@@ -24,11 +24,10 @@ export default class ExamComponent extends LightningElement {
     displayResult;
 
     async connectedCallback() {
-        console.log("ExamId:::::: " + this.examId);
+        console.log("Exam Id::: " + JSON.stringify(this.examId));
         // Fetch assigned questions using wire service
         getAssignedQuestions({ examId: this.examId })
             .then(result => {
-                console.log("result::::: " + JSON.stringify(result));
                 if (result && result.length > 0) {
                     this.setName = result[0].Set_Name;
                     this.fullMarks = result[0].Full_Marks;
@@ -88,12 +87,16 @@ export default class ExamComponent extends LightningElement {
 
     // Method to check if exam is already submitted
     async checkIfSubmitted() {
+        console.log("checking submission");
         try {
             if (this.examId) {
                 const result = await isAnswerSubmitted({ examId: this.examId });
+                console.log("submission result:: " + JSON.stringify(result));
                 if (result === true) {
                     this.loadCandidateResponse(); // Fetch userAnswers if exam is submitted
                     this.isSubmitted = true;
+                } else {
+                    this.isSubmitted = false;
                 }
             } else {
                 console.warn('ExamId is undefined.'); // Handle scenario where examId is undefined
@@ -153,7 +156,7 @@ export default class ExamComponent extends LightningElement {
     }
 
     // Handle form submission
-    handleSubmit() { 
+    async handleSubmit() {
         // Calculate obtained marks
         // Prepare user answers
         this.userAnswers = this.exams.map(exam => ({
@@ -168,9 +171,9 @@ export default class ExamComponent extends LightningElement {
                         .join(', ')
                     : exam.userAnswer || '___Didnt attempt___' // Store empty string if userAnswer is null
         }));
-
-        console.log("isSubmitted::: " + JSON.stringify(isAnswerSubmitted));
-        if (this.isSubmitted) {
+        await this.checkIfSubmitted();
+        console.log("isSubmitted::: " + JSON.stringify(this.isSubmitted));
+        if (this.isSubmitted == true) {
             this.showToast("Error", "Answer already submitted", "error");
         } else {
             console.log("else");
@@ -231,7 +234,6 @@ export default class ExamComponent extends LightningElement {
 
     // Update answer styles based on correctness
     updateAnswerStyles() {
-        console.log("displaying here::::::: " + JSON.stringify(this.displayResult));
 
         // First, map the user answers to question IDs for easy lookup
         const userAnswersMap = this.userAnswers.reduce((map, userAnswer) => {
