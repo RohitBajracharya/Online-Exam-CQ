@@ -11,7 +11,7 @@ public with sharing class SQX_RetrieveExamController {
         ];
 System.debug('response;;;;;;;;'+response);
         List<SQX_Exam__c> examRecords = [
-            SELECT Id, SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c
+            SELECT Id, SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Obtained_Marks__c
             FROM SQX_Exam__c
             WHERE Id = : response.SQX_Exam__c
         ];
@@ -19,10 +19,12 @@ System.debug('response;;;;;;;;'+response);
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
+        Map<Id, Decimal> setObtainedMarksMap = new Map<Id,Decimal>();
         for (SQX_Exam__c exam : examRecords) {
             setIds.add(exam.SQX_Set__c);
             setFullMarksMap.put(exam.SQX_Set__c, exam.SQX_Full_Marks__c);
             setPassMarksMap.put(exam.SQX_Set__c, exam.SQX_Pass_Marks__c);
+            setObtainedMarksMap.put(exam.SQX_Set__c, exam.SQX_Obtained_Marks__c);
             examId = exam.Id;
         }
 
@@ -46,6 +48,9 @@ System.debug('response;;;;;;;;'+response);
                 questionMap.put('Correct_Answer', questionSet.SQX_Question__r.SQX_Correct_Answer__c);
                 questionMap.put('Full_Marks', examRecords[0].SQX_Full_Marks__c);
                 questionMap.put('Pass_Marks', examRecords[0].SQX_Pass_Marks__c);
+                questionMap.put('Obtained_Marks', examRecords[0].SQX_Obtained_Marks__c);
+                
+                
 
                 if (questionSet.SQX_Question__r.SQX_Type__c == 'MCQ' || questionSet.SQX_Question__r.SQX_Type__c == 'Multiple Select MCQ') {
                     questionMap.put('Question_Options', questionSet.SQX_Question__r.SQX_Options__c);
@@ -83,5 +88,13 @@ System.debug('response;;;;;;;;'+response);
         } catch (Exception e) {
             throw new AuraHandledException('Error fetching candidate response: ' + e.getMessage());
         }
+    }
+
+
+    @AuraEnabled
+    public static void updateExamObjectApex(Id examId, Decimal obtainedMarks) {
+        SQX_Exam__c exam = [SELECT Id, SQX_Obtained_Marks__c FROM SQX_Exam__c WHERE Id = :examId];
+        exam.SQX_Obtained_Marks__c = obtainedMarks;
+        update exam;
     }
 }

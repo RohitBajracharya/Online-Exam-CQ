@@ -2,7 +2,8 @@ public with sharing class SQX_candidateResponseController {
     @AuraEnabled(cacheable=true)
     public static List<ExamWrapper> getExamData() {
         List<SQX_Candidate_Response__c> candidateResponses = [
-            SELECT Id, SQX_Exam__r.SQX_Assign_To__r.Name, SQX_Exam__r.SQX_Set_Name_Display__c, SQX_Exam__r.SQX_Obtained_Marks__c,SQX_Exam__r.SQX_Full_Marks__c ,SQX_Admin_Approved__c
+            SELECT Id, SQX_Exam__r.SQX_Assign_To__r.Name, SQX_Exam__r.SQX_Set_Name_Display__c, SQX_Exam__r.
+            SQX_Obtained_Marks__c,SQX_Pass_Status__c ,SQX_Admin_Approved__c
             FROM SQX_Candidate_Response__c
         ];
         
@@ -14,41 +15,13 @@ public with sharing class SQX_candidateResponseController {
             examWrapper.assignTo = candidateResponse.SQX_Exam__r.SQX_Assign_To__r.Name;
             examWrapper.examSet = candidateResponse.SQX_Exam__r.SQX_Set_Name_Display__c;
             examWrapper.obtainedMarks = candidateResponse.SQX_Exam__r.SQX_Obtained_Marks__c;
-            examWrapper.fullMarks = candidateResponse.SQX_Exam__r.SQX_Full_Marks__c;
+            examWrapper.passStatus = candidateResponse.SQX_Pass_Status__c;
             examWrapper.adminApproved = candidateResponse.SQX_Admin_Approved__c;
             examWrappers.add(examWrapper);
         }
         
         return examWrappers;
     }
-
-    @AuraEnabled
-    public static Decimal updateExamData(Id recordId, Decimal obtainedMarks) {
-        
-        system.debug('id::'+recordId);
-        system.debug('obtainedMarks::'+obtainedMarks);
-        SQX_Candidate_Response__c candidateResponse = [SELECT SQX_Exam__c
-                                                        FROM SQX_Candidate_Response__c
-                                                        WHERE Id = :recordId];
-        SQX_Exam__c exam = [SELECT SQX_Obtained_Marks__c 
-                            FROM SQX_Exam__c WHERE Id=:candidateResponse.SQX_Exam__c];                                            
-    
-    
-        if (exam != null) {
-        
-            exam.SQX_Obtained_Marks__c= obtainedMarks;
-    
-
-            update exam;
-    
-    
-            return obtainedMarks;
-        }
-
-    return null;
-
-    }
-
     
     public class ExamWrapper {
         @AuraEnabled
@@ -60,7 +33,7 @@ public with sharing class SQX_candidateResponseController {
         @AuraEnabled
         public Decimal obtainedMarks { get; set; }
         @AuraEnabled
-        public Decimal fullMarks { get; set; }
+        public String passStatus { get; set; }
         @AuraEnabled
         public String adminApproved { get; set; }
     }

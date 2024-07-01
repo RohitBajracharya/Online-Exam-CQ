@@ -1,5 +1,6 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_RetrieveExamController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_RetrieveExamController.getCandidateResponse';
+import updateExamObjectApex from '@salesforce/apex/SQX_RetrieveExamController.updateExamObjectApex';
 
 import { LightningElement, api, track } from 'lwc';
 
@@ -9,6 +10,7 @@ export default class ExamComponent extends LightningElement {
     @track userAnswers = [];
     @track isSubmitted = false;
     @track showModal = false;
+    @track editedFinalMarks = 0;
     obtainedMarks = 0;
     examId;
     setName = '';
@@ -32,6 +34,8 @@ export default class ExamComponent extends LightningElement {
                 this.setName = result[0].Set_Name;
                 this.fullMarks = result[0].Full_Marks;
                 this.passMarks = result[0].Pass_Marks;
+                this.obtainedMarks = result[0].Obtained_Marks;
+                // console.log("result::: "+JSON.stringify(result));
                 if (result && result.length > 0) {
                     this.exams = result.map((exam, idx) => {
                         const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
@@ -128,6 +132,39 @@ export default class ExamComponent extends LightningElement {
     get numberedExams() {
         return this.exams;
     }
+
+    handleFinalMarksChange(event) {
+        console.log('New Final Marks:', event.target.value);
+        this.editedFinalMarks = parseFloat(event.target.value);
+    }
+
+    handleSubmit() {
+        this.showModal = true;
+    }
+
+    confirmSubmit() {
+        this.isSubmitted = true;
+        this.showModal = false;
+        // Add your submit logic here
+        console.log('Submit confirmed',this.editedFinalMarks);
+        
+    
+        // Update Exam object
+        updateExamObjectApex({ examId: this.examId, obtainedMarks: this.editedFinalMarks })
+        .then(result => {
+            console.log('Exam Object updated successfully'+this.editedFinalMarks);
+           
+            
+
+            
+        })
+        .catch(error => {
+            console.error('Error updating Exam Object: ' + JSON.stringify(error));
+           
+        });
+    }
+    
+   
 }
 
 function cleanQuestionString(question) {
