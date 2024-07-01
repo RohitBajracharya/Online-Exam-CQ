@@ -94,7 +94,25 @@ System.debug('response;;;;;;;;'+response);
     @AuraEnabled
     public static void updateExamObjectApex(Id examId, Decimal obtainedMarks) {
         SQX_Exam__c exam = [SELECT Id, SQX_Obtained_Marks__c FROM SQX_Exam__c WHERE Id = :examId];
-        exam.SQX_Obtained_Marks__c = obtainedMarks;
+        exam.SQX_Obtained_Marks__c = exam.SQX_Obtained_Marks__c+obtainedMarks;
         update exam;
+        
     }
+
+    @AuraEnabled
+    public static String updateCandidateResponseApproval(Id responseId, Decimal obtainedMarks, Decimal passMarks) {
+        try {
+            SQX_Candidate_Response__c response = [SELECT Id, SQX_Admin_Approved__c FROM SQX_Candidate_Response__c WHERE Id = :responseId LIMIT 1];
+            response.SQX_Admin_Approved__c = 'Approved';
+            
+              // Update the admin approval status to Approved
+
+            update response;
+            return 'Success';
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+    }
+
+    
 }

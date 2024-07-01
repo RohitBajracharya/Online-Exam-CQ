@@ -1,6 +1,8 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_RetrieveExamController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_RetrieveExamController.getCandidateResponse';
 import updateExamObjectApex from '@salesforce/apex/SQX_RetrieveExamController.updateExamObjectApex';
+import updateCandidateResponseApproval from '@salesforce/apex/SQX_RetrieveExamController.updateCandidateResponseApproval';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 import { LightningElement, api, track } from 'lwc';
 
@@ -150,20 +152,42 @@ export default class ExamComponent extends LightningElement {
         
     
         // Update Exam object
-        updateExamObjectApex({ examId: this.examId, obtainedMarks: this.editedFinalMarks })
+        updateExamObjectApex({ examId: this.examId, obtainedMarks: this.editedFinalMarks, responseId: this.recordId})
         .then(result => {
             console.log('Exam Object updated successfully'+this.editedFinalMarks);
-           
+            
             
 
             
         })
         .catch(error => {
             console.error('Error updating Exam Object: ' + JSON.stringify(error));
-           
+         
         });
+
+        updateCandidateResponseApproval({ responseId: this.recordId })
+            .then(result => {
+                if (result === 'Success') {
+                    console.log('Candidate Response updated successfully');
+                    
+                    this.showToast('Success', 'Candidate Response updated successfully', 'success');
+                } else {
+                    console.error('Validation Exception: ' + result);
+                    this.showToast('Error', result, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating Candidate Response: ' + JSON.stringify(error));
+                this.showToast('Error', 'Error updating Candidate Response', 'error');
+            });
     }
-    
+    showToast(title, message, variant) {
+            const event = new ShowToastEvent({
+                title: title,
+                message: message,
+                 variant: variant,
+            });
+    }
    
 }
 
