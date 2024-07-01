@@ -1,3 +1,4 @@
+<!-- introBox -->
 <template>
     <div if:true={showModal} role="dialog" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
         <div class="slds-modal__container">
@@ -14,6 +15,8 @@
     </div>
     <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
     <template if:true={isExamStarted}>
-        <c-cqui_exam-component></c-cqui_exam-component>
+        <div class="page-container">
+            <c-cqui_exam-component></c-cqui_exam-component>
+        </div>
     </template>
 </template>

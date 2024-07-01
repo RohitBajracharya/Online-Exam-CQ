@@ -1,15 +1,16 @@
 
 <template>
-    <lightning-card title="Countdown Timer" icon-name="standard:real_time" class="slds-p-horizontal_small slds-p-vertical_x-small slds-box">
+    <div class="first">
+    <lightning-card class="slds-p-horizontal_small slds-p-vertical_x-small  clock " >
         <div class="timer-container">
-            <div>
+            <div class="time-remaining-text">
                 Time Remaining
             </div>
             <div class="countdown large-font">
                 {displayTime}
                
             </div>
-            
         </div>
     </lightning-card>
+</div>
 </template>
