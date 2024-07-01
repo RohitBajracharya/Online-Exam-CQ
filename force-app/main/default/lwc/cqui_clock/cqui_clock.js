@@ -52,7 +52,6 @@ export default class Clock extends LightningElement {
             const currentTime = Math.floor(Date.now() / 1000); // Current timestamp in seconds
             const elapsedTime = currentTime - this.startTime;
             const remainingTime = this.minutes * 60 - elapsedTime;
-
             if (remainingTime >= 0) {
                 this.updateTime(remainingTime);
             } else {
@@ -60,7 +59,6 @@ export default class Clock extends LightningElement {
                 clearInterval(this.timer);
                 localStorage.removeItem('startTime');
                 localStorage.removeItem('examDuration');
-
                 try {
                     const examId = await getExamId();
                     try {

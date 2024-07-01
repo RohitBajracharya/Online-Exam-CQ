@@ -56,3 +56,7 @@
     height: 100%; /* Ensure it takes up full height, adjust as needed */
     width: 100%; /* Ensure it takes up full width, adjust as needed */
 }
+.page-container {
+    overflow: hidden; /* Prevent scrolling for the entire page */
+    height: 100vh; /* Set a fixed height for the page (optional) */
+}

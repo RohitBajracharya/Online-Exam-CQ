@@ -50,7 +50,6 @@ export default class ExamComponent extends LightningElement {
                             userAnswer: '',
                             number: idx + 1,
 
-
                         };
                     });
                     this.examId = result[0].Id; // Set examId from the first exam (assuming result is not empty)
@@ -151,7 +150,7 @@ export default class ExamComponent extends LightningElement {
     }
 
     // Handle form submission
-    handleSubmit() {
+    handleSubmit() { 
         // Calculate obtained marks
         // Prepare user answers
         this.userAnswers = this.exams.map(exam => ({
@@ -223,7 +222,6 @@ export default class ExamComponent extends LightningElement {
         } catch (error) {
             console.error("Error while fetching total marks:: " + JSON.stringify(error));
         }
-
 
     }
 
@@ -318,7 +316,7 @@ export default class ExamComponent extends LightningElement {
 
 }
 
-// Function to clean HTML strings (optional)
+// Function to clean HTML strings 
 function cleanQuestionString(question) {
     // Replace any HTML tags from the question title
     return question.replace(/(<([^>]+)>)/gi, "");

@@ -4,14 +4,12 @@ public with sharing class SQX_examController {
         List<Map<String, Object>> exams = new List<Map<String, Object>>();
         Id currentUserId = UserInfo.getUserId();
         Id examId;
-        
         // Get today's date
         Date today = Date.today();
-
        // Query to fetch question set IDs assigned to the user
        system.debug('todayyyyyyyyyyyyyy--------------------------------------------------'+ today);
         List<SQX_Exam__c> examRecords = [
-            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c,SQX_Date__c
+            SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c,SQX_Date__c,	SQX_Status__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId
         ];
@@ -22,8 +20,6 @@ public with sharing class SQX_examController {
             }
         }
         System.debug('examRecords:::::::'+examRecords);
-        
-
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
@@ -35,7 +31,6 @@ public with sharing class SQX_examController {
             setDisplayResultMap.put(exam.SQX_Set__c, exam.SQX_Display_Result__c);
             examId=exam.Id;
         }
- 
         // Query to fetch questions related to the assigned question sets
         List<SQX_Question_Set__c> questionSetRecords = [
             SELECT Id, Name, SQX_Set__c, SQX_Set__r.SQX_Name__c, SQX_Question__c,
@@ -73,9 +68,6 @@ public with sharing class SQX_examController {
                 if (setPassMarksMap.containsKey(questionSet.SQX_Set__c)) {
                     questionMap.put('Pass_Marks', setPassMarksMap.get(questionSet.SQX_Set__c));
                 }
-
-               
-   
                 exams.add(questionMap);
             }
         }
@@ -85,9 +77,7 @@ public with sharing class SQX_examController {
     @AuraEnabled(cacheable=true)
     public static String getExamDuration() {
         Date today = Date.today();
-
         Id currentUserId = UserInfo.getUserId();
-        
         List<SQX_Exam__c> examRecord = [
             SELECT SQX_Duration__c,SQX_Date__c
             FROM SQX_Exam__c 
@@ -102,13 +92,9 @@ public with sharing class SQX_examController {
                 break; // Exit loop once duration is found for today's exam
             }
         }
-        system.debug('filterduration---------------------------------------------------'+filteredDuration);
         return filteredDuration;
     }
     
-
-   
-
     @AuraEnabled
     public static void saveCandidateResponse(List<Map<String, Object>> userAnswers, String examId) {
         try {

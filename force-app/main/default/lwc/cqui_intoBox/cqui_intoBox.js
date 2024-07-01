@@ -1,4 +1,3 @@
-
 import getExamId from '@salesforce/apex/SQX_examController.getExamId';
 import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmitted';
 import updateExamStatusToOngoing from '@salesforce/apex/SQX_examController.updateExamStatusToOngoing';
@@ -25,34 +24,26 @@ export default class IntroBox extends LightningElement {
                         this.isExamStarted = true;
                     } else {
                         this.showModal = true;
-
                     }
                 }
-
-
-
             } catch (error) {
                 console.error("Error fetching answerSubmitted::: " + JSON.stringify(error));
-
             }
         } catch (error) {
             console.error("Error fetching examId::: " + JSON.stringify(error));
         }
 
     }
-
     async startExam() {
         const examId = await getExamId();
         try {
             try {
                 console.log("examid:::"+examId);
                 await updateExamStatusToOngoing({ examId: examId });
-                console.log("hiiiiiiiiii");
                 this.showModal = false;
                 this.isExamStarted = true;
                 localStorage.setItem('startTime', Math.floor(Date.now() / 1000).toString());
                 this.startTimerOnLoad = true;
-
             } catch (error) {
                 console.error("Error updating exam status::: " + JSON.stringify(error));
             }
@@ -60,7 +51,6 @@ export default class IntroBox extends LightningElement {
             console.error("Error fetching examId::: " + JSON.stringify(error));
         }
     }
-
 
 }
 
