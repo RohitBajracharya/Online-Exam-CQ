@@ -35,12 +35,14 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         this.wiredExamData = result;
         
         if (result.data) {
+            console.log('vvvvvvvvvv'+JSON.stringify(result.data));
             this.data = result.data.map(row => {
                 // this.fullMarksMap.set(row.id, row.fullMarks); // Store fullMarks in a map with id as key
                 return {
                     ...row,
                     obtainedMarks: row.obtainedMarks,
                     adminApproved: row.adminApproved,
+                    status: row.passStatus,
                     // fullMarks: row.fullMarks
                 };
             });

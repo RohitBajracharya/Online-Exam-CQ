@@ -111,8 +111,17 @@ System.debug('response;;;;;;;;'+response);
         try {
             SQX_Candidate_Response__c response = [SELECT Id, SQX_Admin_Approved__c FROM SQX_Candidate_Response__c WHERE Id = :responseId LIMIT 1];
             
+            SQX_Candidate_Response__c response = [SELECT Id, SQX_Admin_Approved__c, SQX_Pass_Status__c FROM SQX_Candidate_Response__c WHERE Id = :responseId LIMIT 1];
+            
+            // Update the admin approval status to Approved
             response.SQX_Admin_Approved__c = 'Approved';
-              // Update the admin approval status to Approved
+            
+            // Check if the obtained marks exceed the pass marks and set the status accordingly
+            if (obtainedMarks > passMarks) {
+                response.SQX_Pass_Status__c = 'Pass';
+            } else {
+                response.SQX_Pass_Status__c = 'Fail';
+            }
 
             update response;
             return 'Success';
