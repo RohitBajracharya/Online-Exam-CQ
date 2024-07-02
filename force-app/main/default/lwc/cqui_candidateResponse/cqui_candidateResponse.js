@@ -1,14 +1,14 @@
-import { LightningElement, wire, track } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
 import getExamData from '@salesforce/apex/SQX_candidateResponseController.getExamData';
+import { NavigationMixin } from 'lightning/navigation';
+import { LightningElement, track, wire } from 'lwc';
 
 
 const columns = [
     { label: 'Assign To', fieldName: 'assignTo', type: 'text' },
     { label: 'Set', fieldName: 'examSet', type: 'text' },
-    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number'},
-    { label: 'Admin Approval', fieldName: 'adminApproved', type: 'picklist'},
-    { label: 'Status', fieldName:'status', type:'picklist'},
+    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number' },
+    { label: 'Admin Approval', fieldName: 'adminApproved', type: 'text' },
+    { label: 'Status', fieldName: 'status', type: 'text', cellAttributes: { class: { fieldName: 'statusClass' } } },
     {
         label: 'Actions', fieldName: 'actions',
         type: 'button',
@@ -33,9 +33,9 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     wiredExams(result) {
         console.log('result: ' + JSON.stringify(result.data));
         this.wiredExamData = result;
-        
+
         if (result.data) {
-            console.log('vvvvvvvvvv'+JSON.stringify(result.data));
+            console.log('vvvvvvvvvv' + JSON.stringify(result.data));
             this.data = result.data.map(row => {
                 // this.fullMarksMap.set(row.id, row.fullMarks); // Store fullMarks in a map with id as key
                 return {
@@ -51,38 +51,22 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         }
     }
 
-    // handleSave(event) {
-    //     console.log("save");
-    //     const updatedFields = event.detail.draftValues;
-        
-    //     const id = updatedFields[0].id;
-    //     const obtainedMarks = updatedFields[0].obtainedMarks;
-    //     const fullMarks = this.fullMarksMap.get(id); // Get fullMarks from the map using id
+    get dataWithStatusClass() {
+        return this.data.map(row => {
+            let statusClass;
+            if (row.status === 'Pass') {
+                statusClass = 'slds-text-color_success';
+            } else if (row.status === 'Fail') {
+                statusClass = 'slds-text-color_error';
+            }
+            return { ...row, statusClass };
+        });
+    }
 
-    //     console.log('Updated Fields:', JSON.stringify(updatedFields));
-    //     console.log('id:', JSON.stringify(id));
-    //     console.log('obtainedMarks:', obtainedMarks);
-    //     console.log('fullMarks:', fullMarks);
-
-    //     // Validation
-    //     if (fullMarks < obtainedMarks) {
-    //         this.showToast('Error', 'Obtained marks should be less than or equal to full marks', 'error');
-    //         return;
-    //     }
-
-    //     updateExamData({ recordId: id, obtainedMarks: obtainedMarks })
-    //         .then((result) => {
-    //             console.log('...............' + JSON.stringify(result));
-    //             this.showToast('Success', 'Records updated successfully', 'success');
-    //             this.draftValues = [];
-    //             return refreshApex(this.wiredExamData);
-    //         })
-    //         .catch(error => {
-    //             this.showToast('Error', 'Failed to update records', 'error');
-    //             console.error('Error updating records:', error);
-    //         });
-    // }
-
+    // Getter to return data with dynamically computed statusClass
+    get transformedData() {
+        return this.dataWithStatusClass;
+    }
     handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;

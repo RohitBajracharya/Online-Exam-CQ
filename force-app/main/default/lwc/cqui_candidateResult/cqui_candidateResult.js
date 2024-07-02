@@ -20,7 +20,8 @@ export default class ExamComponent extends LightningElement {
     passMarks = '';
     @api recordId;
     finalMarks;
-
+    noOfFreeEnd = 0;
+    totalNoOfQuestion = 0;
     connectedCallback() {
         this.loadExamData()
             .then(() => this.loadCandidateResponse())
@@ -38,8 +39,8 @@ export default class ExamComponent extends LightningElement {
             this.fullMarks = result[0].Full_Marks;
             this.passMarks = result[0].Pass_Marks;
             this.obtainedMarks = result[0].Obtained_Marks;
-            // console.log("result::: "+JSON.stringify(result));
             if (result && result.length > 0) {
+                console.log("result.length::" + result.length);
                 this.exams = result.map((exam, idx) => {
                     const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
                     return {
@@ -74,7 +75,6 @@ export default class ExamComponent extends LightningElement {
     async loadCandidateResponse() {
         try {
             const result = await getCandidateResponse({ recordId: this.recordId });
-            console.log("Candidate result::: " + JSON.stringify(result));
             const parsedResult = JSON.parse(result);
             this.userAnswers = parsedResult;
         } catch (error) {
@@ -95,13 +95,12 @@ export default class ExamComponent extends LightningElement {
             map[userAnswer.questionNumber] = userAnswer.answer;
             return map;
         }, {});
-        console.log("userAnswersMap:::" + JSON.stringify(userAnswersMap));
 
         const filteredExams = this.exams.filter(exam => userAnswersMap.hasOwnProperty(exam.number));
-
+        console.log("filteredExams length:: " + filteredExams.length);
+        this.totalNoOfQuestion = filteredExams.length;
         this.exams = filteredExams.map(exam => {
             const userAnswer = userAnswersMap[exam.number];
-            console.log("userAnswer:::" + JSON.stringify(userAnswer));
 
             if (exam.isMCQ || exam.isMultiple_Select_MCQ) {
                 exam.questionOptions = exam.questionOptions.map(option => {
@@ -123,6 +122,7 @@ export default class ExamComponent extends LightningElement {
                     };
                 });
             } else if (exam.isFreeEnd) {
+                this.noOfFreeEnd++;
                 exam.userAnswer = userAnswer;
             }
 
@@ -135,7 +135,6 @@ export default class ExamComponent extends LightningElement {
     }
 
     handleFinalMarksChange(event) {
-        console.log('New Final Marks:', event.target.value);
         this.editedFinalMarks = parseFloat(event.target.value);
     }
 
@@ -145,19 +144,24 @@ export default class ExamComponent extends LightningElement {
     async confirmSubmit() {
         this.isSubmitted = true;
         this.showModal = false;
+        console.log("noOfFreeEnd::::" + this.noOfFreeEnd);
+        console.log("totalNoOfQuestion::::" + this.totalNoOfQuestion);
+        const perQuestionMarks = this.fullMarks / this.totalNoOfQuestion;
+        const totalFreeEndMarks = perQuestionMarks * this.noOfFreeEnd;
+        console.log("totalFreeEndMarks::::" + totalFreeEndMarks);
+        if (this.editedFinalMarks > totalFreeEndMarks) {
+            const errorMessage = 'Total Free End Question for this examination is ' + totalFreeEndMarks;
+            this.showToast('Error', errorMessage, 'error');
+            return;
+        }
         // Update Exam object
-        console.log("ObtainedMakrs:::: " + JSON.stringify(this.obtainedMarks));
-        console.log("editedFinalMarks:::: " + JSON.stringify(this.editedFinalMarks));
         const finalObtainedMarks = parseFloat(this.obtainedMarks) + parseFloat(this.editedFinalMarks);
-        console.log("finalObtainedMarkssssss::: " + finalObtainedMarks);
         await updateExamObjectApex({ examId: this.examId, obtainedMarks: this.editedFinalMarks, responseId: this.recordId })
             .then(async result => {
                 if (result == 'success') {
-
                     await updateCandidateResponseApproval({ responseId: this.recordId, passMarks: this.passMarks, finalObtainedMarks: finalObtainedMarks })
                         .then(result => {
                             if (result === 'Success') {
-                                console.log('Candidate Response updated successfully');
 
                                 this.showToast('Success', 'Candidate Response updated successfully', 'success');
                                 setTimeout(() => {
