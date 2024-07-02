@@ -1,7 +1,7 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_examController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_examController.getCandidateResponse';
-import getExamId from '@salesforce/apex/SQX_examController.getExamId';
 import getFullMarks from '@salesforce/apex/SQX_examController.getFullMarks';
+import getOngoingExamId from '@salesforce/apex/SQX_examController.getOngoingExamId';
 import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmitted';
 import saveCandidateResponse from '@salesforce/apex/SQX_examController.saveCandidateResponse';
 import saveObtainedMarks from '@salesforce/apex/SQX_examController.saveObtainedMarks';
@@ -24,10 +24,22 @@ export default class ExamComponent extends LightningElement {
     displayResult;
 
     async connectedCallback() {
+
+        await getOngoingExamId()
+            .then(res => {
+                console.log("res::: " + JSON.stringify(res));
+                if (res != null) {
+                    this.examId = res;
+                }
+            })
+            .catch(error => {
+                console.log("error::: " + JSON.stringify(error));
+            })
+
         console.log("Exam Id::: " + JSON.stringify(this.examId));
         // Fetch assigned questions using wire service
-        getAssignedQuestions({ examId: this.examId })
-            .then(result => {
+        await getAssignedQuestions({ examId: this.examId })
+            .then(async result => {
                 if (result && result.length > 0) {
                     this.setName = result[0].Set_Name;
                     this.fullMarks = result[0].Full_Marks;
@@ -57,7 +69,7 @@ export default class ExamComponent extends LightningElement {
                     this.examId = result[0].Id; // Set examId from the first exam (assuming result is not empty)
                     this.error = undefined;
                     // Check if the exam is already submitted
-                    this.checkIfSubmitted();
+                    await this.checkIfSubmitted();
                 } else {
                     this.error = 'Currently there is no examination for you.'; // Handle scenario where no exams are returned
                 }
@@ -66,21 +78,22 @@ export default class ExamComponent extends LightningElement {
                 this.error = error;
                 this.exams = [];
             });
-        try {
-            const examId = await getExamId();
-            try {
-                const answerSubmitted = await isAnswerSubmitted({ examId: examId });
-                if (answerSubmitted) {
-                    this.examFinished = true;
-                } else {
-                    this.examFinished = false;
-                }
-            } catch (error) {
-                console.error("Error fetching answerSubmitted::: " + JSON.stringify(error));
-            }
-        } catch (error) {
-            console.error("Error fetching examId::: " + JSON.stringify(error));
-        }
+
+
+        console.log("ExamId here::: " + this.examId);
+        // try {
+        //     const answerSubmitted = await isAnswerSubmitted({ examId: examId });
+        //     console.log("answerSubmitted:: " + JSON.stringify(answerSubmitted));
+
+        //     if (answerSubmitted == true) {
+        //         this.examFinished = true;
+        //     } else {
+        //         this.examFinished = false;
+        //     }
+        //     console.log("examFinished::: " + this.examFinished);
+        // } catch (error) {
+        //     console.error("Error fetching answerSubmitted::: " + JSON.stringify(error));
+        // }
 
     }
 
@@ -90,14 +103,26 @@ export default class ExamComponent extends LightningElement {
         console.log("checking submission");
         try {
             if (this.examId) {
-                const result = await isAnswerSubmitted({ examId: this.examId });
-                console.log("submission result:: " + JSON.stringify(result));
-                if (result === true) {
-                    this.loadCandidateResponse(); // Fetch userAnswers if exam is submitted
-                    this.isSubmitted = true;
-                } else {
-                    this.isSubmitted = false;
-                }
+                await isAnswerSubmitted({ examId: this.examId })
+                    .then(res => {
+                        var answerSubmission = JSON.stringify(res);
+                        console.log("Result answerSubmission::: " + answerSubmission);
+                        if (answerSubmission == "true") {
+                            console.log("True");
+                            this.isSubmitted = true;
+                            this.examFinished = true;
+                            this.loadCandidateResponse(); // Fetch userAnswers if exam is submitted
+
+                        } else {
+                            console.log("false");
+
+                            this.isSubmitted = false;
+                            this.examFinished = false;
+                        }
+                    }).catch(error => {
+                        console.error("error in isAnswerSubmitted::" + JSON.stringify(error));
+                    });
+
             } else {
                 console.warn('ExamId is undefined.'); // Handle scenario where examId is undefined
             }
@@ -109,6 +134,7 @@ export default class ExamComponent extends LightningElement {
 
     // Method to load candidate response if exam is already submitted
     loadCandidateResponse() {
+        console.log("loading candiate response");
         getCandidateResponse({ examId: this.examId })
             .then(result => {
                 const parsedResult = JSON.parse(result);

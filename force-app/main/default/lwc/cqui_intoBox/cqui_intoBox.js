@@ -19,7 +19,7 @@ export default class IntroBox extends LightningElement {
             console.log("isAnotherExamScheduled::: " + JSON.stringify(isAnotherExamSchduled));
             if (!isAnotherExamSchduled) {
                 const examId = await getExamId();
-                this.examination=examId;
+                this.examination = examId;
                 console.log("examId getting:: " + JSON.stringify(examId));
                 try {
                     if (examId) {
@@ -78,7 +78,7 @@ export default class IntroBox extends LightningElement {
 
 
         } catch (error) {
-            console.error("Error fetching examId::: " + JSON.stringify(error));
+            console.error("Error fetching examId in intoBox::: " + JSON.stringify(error));
         }
 
     }
