@@ -85,14 +85,14 @@ public with sharing class SQX_examController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static String getExamDuration() {
+    public static String getExamDuration(Id examId) {
         Date today = Date.today();
         Id currentUserId = UserInfo.getUserId();
         List<SQX_Exam__c> examRecord = [
             SELECT SQX_Duration__c,SQX_Date__c
             FROM SQX_Exam__c 
             WHERE SQX_Assign_To__c = :currentUserId 
-            
+            and Id=:examId
         ];
         String filteredDuration = '';
     
@@ -106,17 +106,22 @@ public with sharing class SQX_examController {
     }
     
     @AuraEnabled
-    public static void saveCandidateResponse(List<Map<String, Object>> userAnswers, String examId) {
+    public static void saveCandidateResponse(List<Map<String, Object>> userAnswers, String examId,Decimal noOfFreeEndQuestion,String passStatus) {
         try {
             SQX_Candidate_Response__c response = new SQX_Candidate_Response__c();
             response.SQX_Exam__c = examId;
             response.SQX_Candidate_Answer__c = JSON.serialize(userAnswers);
+            if(noOfFreeEndQuestion==0){
+                response.SQX_Admin_Approved__c='Approved';
+                response.SQX_Pass_Status__c=passStatus;
+            }
             
             insert response;
         } catch (Exception e) {
             throw new AuraHandledException('Error saving candidate response: ' + e.getMessage());
         }
     }
+    
 
     @AuraEnabled
     public static void saveObtainedMarks(Decimal obtainedMarks,Id examId){

@@ -8,7 +8,7 @@ export default class Clock extends LightningElement {
     startTime;
     displayTime;
     timer; // Timer interval reference
-
+    @api examId;
     connectedCallback() {
         const savedStartTime = localStorage.getItem('startTime');
         const savedDuration = localStorage.getItem('examDuration');
@@ -29,7 +29,7 @@ export default class Clock extends LightningElement {
             }
         } else {
             // Fetch the duration from the server
-            getExamDuration().then(result => {
+            getExamDuration({examId:this.examId}).then(result => {
                 this.minutes = this.convertDurationToMinutes(result);
                 this.startTime = Math.floor(Date.now() / 1000);
                 localStorage.setItem('startTime', this.startTime);

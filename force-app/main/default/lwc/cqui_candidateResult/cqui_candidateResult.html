@@ -52,7 +52,7 @@
         </template>
 
         <!-- Button at the bottom -->
-        <div if:true={hasObtainedMarksPermission} class="slds-p-around_medium slds-text-align_center">
+        <div if:true={showFinalMarksButton} class="slds-p-around_medium slds-text-align_center">
             <lightning-button label="Give Final Marks" onclick={handleSubmit}></lightning-button>
         </div>
         <!-- Modal box -->

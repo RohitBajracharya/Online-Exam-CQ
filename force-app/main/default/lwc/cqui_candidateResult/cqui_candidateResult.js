@@ -24,6 +24,8 @@ export default class ExamComponent extends LightningElement {
     noOfFreeEnd = 0;
     totalNoOfQuestion = 0;
     hasObtainedMarksPermission = false;
+    perQuestionMarks;
+    totalFreeEndMarks;
 
     async connectedCallback() {
         getObtainMarksEditPermission()
@@ -141,6 +143,11 @@ export default class ExamComponent extends LightningElement {
 
             return exam;
         });
+
+    }
+
+    get showFinalMarksButton() {
+        return this.noOfFreeEnd > 0 && this.hasObtainedMarksPermission;
     }
 
     get numberedExams() {

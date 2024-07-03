@@ -44,7 +44,7 @@
   </div>
 
   <!--clock component -->
-  <c-cqui_clock if:false={examFinished} ontimeup={handleSubmit} onresettimer={handleResetTimer}
+  <c-cqui_clock exam-id={examId} if:false={examFinished} ontimeup={handleSubmit} onresettimer={handleResetTimer}
     minutes={remainingTime}></c-cqui_clock>
 
   <!--exam component-->
