@@ -1,5 +1,6 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_RetrieveExamController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_RetrieveExamController.getCandidateResponse';
+import getObtainMarksEditPermission from '@salesforce/apex/SQX_RetrieveExamController.getObtainMarksEditPermission';
 import updateCandidateResponseApproval from '@salesforce/apex/SQX_RetrieveExamController.updateCandidateResponseApproval';
 import updateExamObjectApex from '@salesforce/apex/SQX_RetrieveExamController.updateExamObjectApex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -22,7 +23,18 @@ export default class ExamComponent extends LightningElement {
     finalMarks;
     noOfFreeEnd = 0;
     totalNoOfQuestion = 0;
-    connectedCallback() {
+    hasObtainedMarksPermission = false;
+
+    async connectedCallback() {
+        getObtainMarksEditPermission()
+            .then(result => {
+                const res = JSON.stringify(result);
+                console.log("res:::" + JSON.stringify(result));
+                if (res == 'true') {
+                    this.hasObtainedMarksPermission = true;
+                }
+            })
+            .catch(error => console.error("error::" + JSON.stringify(error)));
         this.loadExamData()
             .then(() => this.loadCandidateResponse())
             .then(() => this.updateAnswerStyles())
@@ -32,6 +44,7 @@ export default class ExamComponent extends LightningElement {
             });
     }
 
+
     async loadExamData() {
         try {
             const result = await getAssignedQuestions({ recordId: this.recordId });
@@ -39,8 +52,8 @@ export default class ExamComponent extends LightningElement {
             this.fullMarks = result[0].Full_Marks;
             this.passMarks = result[0].Pass_Marks;
             this.obtainedMarks = result[0].Obtained_Marks;
+            console.log("Result::::::: " + JSON.stringify(result));
             if (result && result.length > 0) {
-                console.log("result.length::" + result.length);
                 this.exams = result.map((exam, idx) => {
                     const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
                     return {

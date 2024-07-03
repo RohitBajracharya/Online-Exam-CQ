@@ -74,7 +74,6 @@ public with sharing class SQX_RetrieveExamController {
     public static List<String> getCandidateResponse(ID recordId) {
         try {
             Id currentUserId = UserInfo.getUserId();
-
             List<SQX_Candidate_Response__c> responses = [
                 SELECT SQX_Candidate_Answer__c
                 FROM SQX_Candidate_Response__c
@@ -131,5 +130,19 @@ public with sharing class SQX_RetrieveExamController {
         }
     }
 
-    
+    @AuraEnabled(cacheable=true)
+    public static Boolean getObtainMarksEditPermission(){
+        Id userId=UserInfo.getUserId();
+        Boolean hasPermission=false;
+        List<PermissionSetAssignment> lstcurrentUserPerSet =    [SELECT Id, PermissionSet.Name,AssigneeId FROM PermissionSetAssignment
+                                                                WHERE AssigneeId = :userId ];
+        for(PermissionSetAssignment ps:lstcurrentUserPerSet ) {
+            if(ps.PermissionSet.Name.equals('OnlineExamAdmin_PS3')){
+                hasPermission=true;
+                break;
+            }
+        }        
+        System.debug('hasPermission:: '+hasPermission);     
+        return hasPermission;                              
+    }
 }
