@@ -28,15 +28,17 @@ export default class ExamComponent extends LightningElement {
     totalFreeEndMarks;
 
     async connectedCallback() {
+        // checks whether user have permission to give final marks to candidate
         getObtainMarksEditPermission()
             .then(result => {
                 const res = JSON.stringify(result);
-                console.log("res:::" + JSON.stringify(result));
                 if (res == 'true') {
                     this.hasObtainedMarksPermission = true;
                 }
             })
             .catch(error => console.error("error::" + JSON.stringify(error)));
+
+        //retrieves assigned question, candidate response and bind assigned questions and candidate response
         this.loadExamData()
             .then(() => this.loadCandidateResponse())
             .then(() => this.updateAnswerStyles())
@@ -49,6 +51,7 @@ export default class ExamComponent extends LightningElement {
 
     async loadExamData() {
         try {
+            // retrieves assigned question to candidate
             const result = await getAssignedQuestions({ recordId: this.recordId });
             this.setName = result[0].Set_Name;
             this.fullMarks = result[0].Full_Marks;
@@ -97,14 +100,15 @@ export default class ExamComponent extends LightningElement {
         }
     }
 
-    getExamOptionChecked(exam, option) {
-        return exam.selectedOption === option.value;
-    }
+    // getExamOptionChecked(exam, option) {
+    //     return exam.selectedOption === option.value;
+    // }
 
     closeModal() {
         this.showModal = false;
     }
 
+    // add proper text colors to candidate answers, correct answer, wrong answer and unattempted answer
     updateAnswerStyles() {
         const userAnswersMap = this.userAnswers.reduce((map, userAnswer) => {
             map[userAnswer.questionNumber] = userAnswer.answer;
@@ -161,6 +165,7 @@ export default class ExamComponent extends LightningElement {
     handleSubmit() {
         this.showModal = true;
     }
+    //calculate per question marks of free-end and saves final marking 
     async confirmSubmit() {
         this.isSubmitted = true;
         this.showModal = false;
@@ -184,9 +189,10 @@ export default class ExamComponent extends LightningElement {
                             if (result === 'Success') {
 
                                 this.showToast('Success', 'Candidate Response updated successfully', 'success');
+
                                 setTimeout(() => {
                                     window.location.reload();
-                                }, 1500);
+                                }, 1200);
                             } else {
                                 console.error('Validation Exception: ' + result);
                                 this.showToast('Error', result, 'error');

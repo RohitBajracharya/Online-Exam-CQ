@@ -26,18 +26,14 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     @track data = [];
     @track columns = columns;
     @track draftValues = [];
-    wiredExamData;
-    // fullMarksMap = new Map();
 
+ 
+
+    // retrieves candidateResponse values and bind in data varaible
     @wire(getExamData)
     wiredExams(result) {
-        console.log('result: ' + JSON.stringify(result.data));
-        this.wiredExamData = result;
-
         if (result.data) {
-            console.log('vvvvvvvvvv' + JSON.stringify(result.data));
             this.data = result.data.map(row => {
-                // this.fullMarksMap.set(row.id, row.fullMarks); // Store fullMarks in a map with id as key
                 return {
                     ...row,
                     obtainedMarks: row.obtainedMarks,
@@ -51,6 +47,9 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         }
     }
 
+    
+
+    // getter to show color of passStatus text color
     get dataWithStatusClass() {
         return this.data.map(row => {
             let statusClass;
@@ -67,6 +66,8 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     get transformedData() {
         return this.dataWithStatusClass;
     }
+
+    // gets called when users cicks 'View Details' button
     handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
@@ -79,8 +80,8 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         }
     }
 
+    // method that navigate the user to particular candidate response result page
     handleViewDetails(row) {
-        console.log('View details for:', row);
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
             attributes: {
@@ -91,20 +92,4 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         });
     }
 
-    // handleCellChange(event) {
-    //     const draftValuesMap = new Map(this.draftValues.map(draft => [draft.id, draft]));
-    //     event.detail.draftValues.forEach(draft => {
-    //         draftValuesMap.set(draft.id, { ...draftValuesMap.get(draft.id), ...draft });
-    //     });
-    //     this.draftValues = Array.from(draftValuesMap.values());
-    // }
-
-    // showToast(title, message, variant) {
-    //     const event = new ShowToastEvent({
-    //         title: title,
-    //         message: message,
-    //         variant: variant,
-    //     });
-    //     this.dispatchEvent(event);
-    // }
 }

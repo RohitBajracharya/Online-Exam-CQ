@@ -130,6 +130,7 @@ public with sharing class SQX_RetrieveExamController {
         }
     }
 
+    // checks and return boolean value for whether user have 'OnlineExamAdmin_PS3' permission set assigned
     @AuraEnabled(cacheable=true)
     public static Boolean getObtainMarksEditPermission(){
         Id userId=UserInfo.getUserId();
