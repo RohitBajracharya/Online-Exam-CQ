@@ -27,6 +27,13 @@ export default class ExamComponent extends LightningElement {
     perQuestionMarks;
     totalFreeEndMarks;
 
+    freeEndQues;
+    mcqQues;
+    multipleMcqQues;
+    freeEndQuestion;
+    mcqQuestion;
+    multipleMcqQuestion;
+
     async connectedCallback() {
         // checks whether user have permission to give final marks to candidate
         getObtainMarksEditPermission()
@@ -47,6 +54,8 @@ export default class ExamComponent extends LightningElement {
                 this.error = error;
             });
     }
+
+
 
 
     async loadExamData() {
@@ -80,6 +89,7 @@ export default class ExamComponent extends LightningElement {
                 });
                 this.examId = result[0].Id;
                 this.error = undefined;
+                await this.groupingQuestion();
             } else {
                 this.error = { message: 'No exams found.' };
             }
@@ -89,7 +99,20 @@ export default class ExamComponent extends LightningElement {
             this.exams = [];
         }
     }
+    async groupingQuestion() {
+        this.freeEndQues = this.exams.filter(exam => exam.isFreeEnd == true)
+        this.mcqQues = this.exams.filter(exam => exam.isMCQ == true)
+        this.multipleMcqQues = this.exams.filter(exam => exam.isMultiple_Select_MCQ == true)
+        this.exams = [];
+        this.exams.push(...this.freeEndQues, ...this.mcqQues, ...this.multipleMcqQues);
 
+
+
+        this.freeEndQuestion = this.freeEndQues.length > 0 ? true : false
+        this.mcqQuestion = this.mcqQues.length > 0 ? true : false
+        this.multipleMcqQuestion = this.multipleMcqQues.length > 0 ? true : false
+
+    }
     async loadCandidateResponse() {
         try {
             const result = await getCandidateResponse({ recordId: this.recordId });

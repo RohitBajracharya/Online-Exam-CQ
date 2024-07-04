@@ -24,8 +24,18 @@ export default class ExamComponent extends LightningElement {
     displayResult;
     noOfFreeEnd = 0;
 
-    async connectedCallback() {
+    freeEndQues;
+    mcqQues;
+    multipleMcqQues;
+    freeEndQuestion;
+    mcqQuestion;
+    multipleMcqQuestion;
 
+    num = 0;
+
+
+    async connectedCallback() {
+        this.num = 0;
         await getOngoingExamId()
             .then(res => {
                 if (res != null) {
@@ -71,6 +81,8 @@ export default class ExamComponent extends LightningElement {
                     this.error = undefined;
                     // Check if the exam is already submitted
                     await this.checkIfSubmitted();
+                    await this.groupingQuestion();
+                    console.log("Exams::; " + JSON.stringify(this.exams));
                 } else {
                     this.error = 'Currently there is no examination for you.'; // Handle scenario where no exams are returned
                 }
@@ -79,6 +91,24 @@ export default class ExamComponent extends LightningElement {
                 this.error = error;
                 this.exams = [];
             });
+
+    }
+    get questionNumber() {
+        return ++this.num;
+    }
+
+    async groupingQuestion() {
+        this.freeEndQues = this.exams.filter(exam => exam.isFreeEnd == true)
+        this.mcqQues = this.exams.filter(exam => exam.isMCQ == true)
+        this.multipleMcqQues = this.exams.filter(exam => exam.isMultiple_Select_MCQ == true)
+        this.exams = [];
+        this.exams.push(...this.freeEndQues, ...this.mcqQues, ...this.multipleMcqQues);
+
+
+
+        this.freeEndQuestion = this.freeEndQues.length > 0 ? true : false
+        this.mcqQuestion = this.mcqQues.length > 0 ? true : false
+        this.multipleMcqQuestion = this.multipleMcqQues.length > 0 ? true : false
 
     }
 
@@ -177,6 +207,8 @@ export default class ExamComponent extends LightningElement {
                         .join(', ')
                     : exam.userAnswer || '___Didnt attempt___' // Store empty string if userAnswer is null
         }));
+
+        console.log("userAnswer ::::::" + JSON.stringify(this.userAnswers));
         await this.checkIfSubmitted();
         if (this.isSubmitted == true) {
             this.showToast("Error", "Answer already submitted", "error");
@@ -336,6 +368,7 @@ export default class ExamComponent extends LightningElement {
             return true;
         }
     }
+
 
 
 }

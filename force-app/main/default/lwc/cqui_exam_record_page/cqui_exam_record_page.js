@@ -7,11 +7,20 @@ export default class Cqui_exam_record_page extends LightningElement {
     fullMarks = '';
     passMarks = '';
     exams = [];
+    freeEndQues;
+    mcqQues;
+    multipleMcqQues;
+    freeEndQuestion;
+    mcqQuestion;
+    multipleMcqQuestion;
+    questionNumber = [];
 
     async connectedCallback() {
+        this.num = 0;
+
         // Fetch assigned questions using wire service
         await getAssignedQuestions({ recordId: this.recordId })
-            .then(result => {
+            .then(async result => {
                 if (result && result.length > 0) {
                     this.setName = result[0].Set_Name;
                     this.fullMarks = result[0].Full_Marks;
@@ -34,6 +43,7 @@ export default class Cqui_exam_record_page extends LightningElement {
 
                         };
                     });
+                    await this.groupingQuestion();
                     this.error = undefined;
 
                 } else {
@@ -45,11 +55,27 @@ export default class Cqui_exam_record_page extends LightningElement {
                 this.error = error;
                 this.exams = [];
             });
-        this.updateAnswerStyles();
+        await this.updateAnswerStyles();
 
     }
 
-    updateAnswerStyles() {
+
+
+    async groupingQuestion() {
+        console.log("grouping");
+
+        this.freeEndQues = this.exams.filter(exam => exam.isFreeEnd == true)
+        this.mcqQues = this.exams.filter(exam => exam.isMCQ == true)
+        this.multipleMcqQues = this.exams.filter(exam => exam.isMultiple_Select_MCQ == true)
+        this.exams = [];
+        this.exams.push(...this.freeEndQues, ...this.mcqQues, ...this.multipleMcqQues);
+
+        this.freeEndQuestion = this.freeEndQues.length > 0 ? true : false
+        this.mcqQuestion = this.mcqQues.length > 0 ? true : false
+        this.multipleMcqQuestion = this.multipleMcqQues.length > 0 ? true : false
+
+    }
+    async updateAnswerStyles() {
         console.log("Exams::: " + JSON.stringify(this.exams));
         // // Update the exams array with proper option classes and user answers
         this.exams = this.exams.map(exam => {

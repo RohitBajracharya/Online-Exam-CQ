@@ -12,40 +12,70 @@
                 </div>
             </div>
             <!--questions-->
-            <template for:each={numberedExams} for:item="exam">
-                <div key={exam.Id} class="slds-box slds-m-around_medium">
-                    <!--question title-->
-                    <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
-
-                    <!-- Single Choice Questions -->
-                    <template if:true={exam.isMCQ}>
-                        <p><strong>Options:</strong></p>
-                        <template for:each={exam.questionOptions} for:item="option">
-                            <div key={option.value} class={option.optionClass}>
-                                <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value}
-                                </p>
-                            </div>
-                        </template>
-                    </template>
-
-                    <!-- Multiple Choice Questions -->
-                    <template if:true={exam.isMultiple_Select_MCQ}>
-                        <p><strong>Options:</strong></p>
-                        <template for:each={exam.questionOptions} for:item="option">
-                            <div key={option.value} class={option.optionClass}>
-
-                                <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value}
-                                </p>
-                            </div>
-                        </template>
-                    </template>
-
-                    <!-- Free End Questions -->
+            <!-- Free End Questions -->
+            <template if:true={freeEndQuestion}>
+                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
+                <template for:each={numberedExams} for:item="exam">
                     <template if:true={exam.isFreeEnd}>
-                        <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
+                        <div key={exam.Id} class="slds-box slds-m-around_medium">
+                            <!--question title-->
+                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
+                            </p>
+                            <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
+                        </div>
                     </template>
-                </div>
+                </template>
+
             </template>
+
+            <!-- Single Choice Questions -->
+            <template if:true={freeEndQuestion}>
+                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
+                <template for:each={numberedExams} for:item="exam">
+                    <template if:true={exam.isMCQ}>
+                        <div key={exam.Id} class="slds-box slds-m-around_medium">
+                            <!--question title-->
+                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
+                            </p>
+                            <p><strong>Options:</strong></p>
+                            <template for:each={exam.questionOptions} for:item="option">
+                                <div key={option.value} class={option.optionClass}>
+                                    <p class={option.optionClass} style="font-size: larger;"> {option.label}:
+                                        {option.value}
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </template>
+
+            </template>
+
+            <!-- Multiple Choice Questions -->
+            <template if:true={freeEndQuestion}>
+                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
+                <template for:each={numberedExams} for:item="exam">
+                    <template if:true={exam.isMultiple_Select_MCQ}>
+                        <div key={exam.Id} class="slds-box slds-m-around_medium">
+                            <!--question title-->
+                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
+                            </p>
+                            <p><strong>Options:</strong></p>
+                            <template for:each={exam.questionOptions} for:item="option">
+                                <div key={option.value} class={option.optionClass}>
+
+                                    <p class={option.optionClass} style="font-size: larger;"> {option.label}:
+                                        {option.value}
+                                    </p>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                </template>
+
+            </template>
+
         </template>
         <template if:true={error}>
             <p>{error.body.message}</p>
