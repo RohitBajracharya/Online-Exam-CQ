@@ -82,7 +82,6 @@ export default class ExamComponent extends LightningElement {
                     // Check if the exam is already submitted
                     await this.checkIfSubmitted();
                     await this.groupingQuestion();
-                    console.log("Exams::; " + JSON.stringify(this.exams));
                 } else {
                     this.error = 'Currently there is no examination for you.'; // Handle scenario where no exams are returned
                 }
@@ -106,7 +105,7 @@ export default class ExamComponent extends LightningElement {
 
         this.exams = this.exams.map((exam, index) => ({
             ...exam,
-            number: index + 1 
+            number: index + 1
         }));
 
         this.freeEndQuestion = this.freeEndQues.length > 0 ? true : false
@@ -211,26 +210,22 @@ export default class ExamComponent extends LightningElement {
                     : exam.userAnswer || '___Didnt attempt___' // Store empty string if userAnswer is null
         }));
 
-        console.log("userAnswer ::::::" + JSON.stringify(this.userAnswers));
         await this.checkIfSubmitted();
         if (this.isSubmitted == true) {
             this.showToast("Error", "Answer already submitted", "error");
         } else {
             await this.calculateMarks();
-            console.log("obtainedMarks:::" + this.obtainedMarks);
-            console.log("passMarks:::" + this.passMarks);
+
             var passingStatus;
             if (this.obtainedMarks > this.passMarks) {
                 passingStatus = 'Pass';
             } else {
                 passingStatus = 'Fail';
             }
-            console.log("passingStatus::::" + passingStatus);
 
             // Save candidate response
             saveCandidateResponse({ userAnswers: JSON.stringify(this.userAnswers), examId: this.examId, noOfFreeEndQuestion: this.noOfFreeEnd, passStatus: passingStatus })
                 .then(result => {
-                    console.log("obtainedMarks before saving:::" + this.obtainedMarks);
 
                     saveObtainedMarks({ obtainedMarks: this.obtainedMarks, examId: this.examId }).then(result => {
                         this.showModal = true; // Show modal after submission

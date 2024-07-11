@@ -41,6 +41,7 @@ export default class Clock extends LightningElement {
         }
     }
 
+
     stopTimer() {
         clearInterval(this.timer);
         this.updateTime(0); // Reset display to 00:00:00
