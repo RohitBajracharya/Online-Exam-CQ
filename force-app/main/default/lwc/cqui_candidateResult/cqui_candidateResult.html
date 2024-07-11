@@ -30,7 +30,7 @@
 
             <!-- Single Choice Questions -->
             <template if:true={freeEndQuestion}>
-                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
+                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "MCQ"</b></p>
                 <template for:each={numberedExams} for:item="exam">
                     <template if:true={exam.isMCQ}>
                         <div key={exam.Id} class="slds-box slds-m-around_medium">
@@ -53,7 +53,7 @@
 
             <!-- Multiple Choice Questions -->
             <template if:true={freeEndQuestion}>
-                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
+                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Multiple Select MCQ"</b></p>
                 <template for:each={numberedExams} for:item="exam">
                     <template if:true={exam.isMultiple_Select_MCQ}>
                         <div key={exam.Id} class="slds-box slds-m-around_medium">

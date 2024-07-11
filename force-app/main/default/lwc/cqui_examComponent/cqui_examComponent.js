@@ -104,7 +104,10 @@ export default class ExamComponent extends LightningElement {
         this.exams = [];
         this.exams.push(...this.freeEndQues, ...this.mcqQues, ...this.multipleMcqQues);
 
-
+        this.exams = this.exams.map((exam, index) => ({
+            ...exam,
+            number: index + 1 
+        }));
 
         this.freeEndQuestion = this.freeEndQues.length > 0 ? true : false
         this.mcqQuestion = this.mcqQues.length > 0 ? true : false
