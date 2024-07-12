@@ -26,7 +26,6 @@ export default class IntroBox extends LightningElement {
                             this.examFinished = true;
                             this.isExamStarted = true;
                         } else {
-                            console.log("else");
                             const savedStartTime = localStorage.getItem('startTime');
                             if (savedStartTime != null) {
                                 this.showModal = false;
@@ -47,11 +46,9 @@ export default class IntroBox extends LightningElement {
                 const examId = await getNewExamId();
                 this.examination = examId;
 
-                console.log("examId getting new:: " + JSON.stringify(examId));
                 try {
                     if (examId) {
                         const answerSubmitted = await isAnswerSubmitted({ examId: examId });
-                        console.log("answerSubmitted::: " + JSON.stringify(answerSubmitted));
                         if (answerSubmitted) {
                             this.examFinished = true;
                             this.isExamStarted = true;

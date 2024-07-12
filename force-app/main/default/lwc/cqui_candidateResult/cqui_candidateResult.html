@@ -1,95 +1,91 @@
 <template>
     <lightning-card>
-        <template if:true={exams}>
-            <!--question setName, total marks, pass marks-->
-            <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-p-around_medium">
-                <div class="slds-col slds-size_1-of-1 slds-text-align_center">
-                    <p class="slds-text-heading_large "><b>Set: '{setName}'</b></p>
+        <div class="slds-m-around_medium no-print slds-text-align_right">
+            <lightning-button label="Print" icon-name="utility:print" onclick={handlePrint}>
+            </lightning-button>
+        </div>
+
+        <div class="printable-content">
+            <template if:true={exams}>
+                <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-p-around_medium">
+                    <div class="slds-col slds-size_1-of-1 slds-text-align_center">
+                        <p class="slds-text-heading_large"><b>Set: '{setName}'</b></p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-1 slds-text-align_right">
+                        <p class="slds-text-heading_small"><b>Full Marks:</b> {fullMarks}</p>
+                        <p class="slds-text-heading_small"><b>Pass Marks:</b> {passMarks}</p>
+                    </div>
                 </div>
-                <div class="slds-col slds-size_1-of-1 slds-text-align_right">
-                    <p class="slds-text-heading_small"><b>Full Marks:</b> {fullMarks}</p>
-                    <p class="slds-text-heading_small"><b>Pass Marks:</b> {passMarks}</p>
-                </div>
-            </div>
-            <!--questions-->
-            <!-- Free End Questions -->
-            <template if:true={freeEndQuestion}>
-                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
-                <template for:each={numberedExams} for:item="exam">
-                    <template if:true={exam.isFreeEnd}>
-                        <div key={exam.Id} class="slds-box slds-m-around_medium">
-                            <!--question title-->
-                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
-                            </p>
-                            <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
-                        </div>
+
+                <!-- Free End Questions -->
+                <template if:true={freeEndQuestion}>
+                    <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
+                    <template for:each={numberedExams} for:item="exam">
+                        <template if:true={exam.isFreeEnd}>
+                            <div key={exam.Id} class="slds-box slds-m-around_medium">
+                                <p style="font-size: larger;"><strong>Question {exam.number}:</strong>
+                                    {exam.Question_Title}</p>
+                                <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
+                            </div>
+                        </template>
                     </template>
                 </template>
 
-            </template>
-
-            <!-- Single Choice Questions -->
-            <template if:true={freeEndQuestion}>
-                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "MCQ"</b></p>
-                <template for:each={numberedExams} for:item="exam">
-                    <template if:true={exam.isMCQ}>
-                        <div key={exam.Id} class="slds-box slds-m-around_medium">
-                            <!--question title-->
-                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
-                            </p>
-                            <p><strong>Options:</strong></p>
-                            <template for:each={exam.questionOptions} for:item="option">
-                                <div key={option.value} class={option.optionClass}>
-                                    <p class={option.optionClass} style="font-size: larger;"> {option.label}:
-                                        {option.value}
-                                    </p>
-                                </div>
-                            </template>
-                        </div>
+                <!-- Single Choice Questions -->
+                <template if:true={mcqQuestion}>
+                    <p class="slds-text-align_center slds-text-heading_medium"><b>Group "MCQ"</b></p>
+                    <template for:each={numberedExams} for:item="exam">
+                        <template if:true={exam.isMCQ}>
+                            <div key={exam.Id} class="slds-box slds-m-around_medium">
+                                <p style="font-size: larger;"><strong>Question {exam.number}:</strong>
+                                    {exam.Question_Title}</p>
+                                <p><strong>Options:</strong></p>
+                                <template for:each={exam.questionOptions} for:item="option">
+                                    <div key={option.value} class={option.optionClass}>
+                                        <p class={option.optionClass} style="font-size: larger;"> {option.label}:
+                                            {option.value}</p>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
                     </template>
                 </template>
 
-            </template>
-
-            <!-- Multiple Choice Questions -->
-            <template if:true={freeEndQuestion}>
-                <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Multiple Select MCQ"</b></p>
-                <template for:each={numberedExams} for:item="exam">
-                    <template if:true={exam.isMultiple_Select_MCQ}>
-                        <div key={exam.Id} class="slds-box slds-m-around_medium">
-                            <!--question title-->
-                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
-                            </p>
-                            <p><strong>Options:</strong></p>
-                            <template for:each={exam.questionOptions} for:item="option">
-                                <div key={option.value} class={option.optionClass}>
-
-                                    <p class={option.optionClass} style="font-size: larger;"> {option.label}:
-                                        {option.value}
-                                    </p>
-                                </div>
-                            </template>
-                        </div>
+                <!-- Multiple Choice Questions -->
+                <template if:true={multipleMcqQuestion}>
+                    <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Multiple Select MCQ"</b></p>
+                    <template for:each={numberedExams} for:item="exam">
+                        <template if:true={exam.isMultiple_Select_MCQ}>
+                            <div key={exam.Id} class="slds-box slds-m-around_medium">
+                                <p style="font-size: larger;"><strong>Question {exam.number}:</strong>
+                                    {exam.Question_Title}</p>
+                                <p><strong>Options:</strong></p>
+                                <template for:each={exam.questionOptions} for:item="option">
+                                    <div key={option.value} class={option.optionClass}>
+                                        <p class={option.optionClass} style="font-size: larger;"> {option.label}:
+                                            {option.value}</p>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
                     </template>
-
                 </template>
-
             </template>
+        </div>
 
-        </template>
         <template if:true={error}>
             <p>{error.body.message}</p>
         </template>
 
         <!-- Button at the bottom -->
-        <div if:true={showFinalMarksButton} class="slds-p-around_medium slds-text-align_center">
+        <div if:true={showFinalMarksButton} class="slds-p-around_medium slds-text-align_center no-print">
             <lightning-button label="Give Final Marks" onclick={handleSubmit}></lightning-button>
         </div>
+
         <!-- Modal box -->
         <template if:true={showModal}>
             <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
                 <div class="slds-modal__container">
-                    <!-- Modal/Dialog Header -->
                     <header class="slds-modal__header">
                         <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
                             title="Close" onclick={closeModal}>
@@ -99,7 +95,6 @@
                         </button>
                         <h2 class="slds-text-heading_medium">Submit Confirmation</h2>
                     </header>
-                    <!-- Modal/Dialog Body -->
                     <div class="slds-modal__content slds-p-around_medium">
                         <p><strong>Full Marks:</strong> {fullMarks}</p>
                         <p><strong>Pass Marks:</strong> {passMarks}</p>
@@ -107,8 +102,6 @@
                         <lightning-input type="number" label="Enter Marks for Free End Questions"
                             value={editedFinalMarks} onchange={handleFinalMarksChange}></lightning-input>
                     </div>
-
-                    <!-- Modal/Dialog Footer -->
                     <footer class="slds-modal__footer">
                         <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
                         <lightning-button variant="brand" label="Confirm" onclick={confirmSubmit}></lightning-button>

@@ -66,7 +66,6 @@ export default class ExamComponent extends LightningElement {
             this.fullMarks = result[0].Full_Marks;
             this.passMarks = result[0].Pass_Marks;
             this.obtainedMarks = result[0].Obtained_Marks;
-            console.log("Result::::::: " + JSON.stringify(result));
             if (result && result.length > 0) {
                 this.exams = result.map((exam, idx) => {
                     const questionOptions = exam.Question_Options ? exam.Question_Options.split('/') : [];
@@ -142,7 +141,6 @@ export default class ExamComponent extends LightningElement {
         }, {});
 
         const filteredExams = this.exams.filter(exam => userAnswersMap.hasOwnProperty(exam.number));
-        console.log("filteredExams length:: " + filteredExams.length);
         this.totalNoOfQuestion = filteredExams.length;
         this.exams = filteredExams.map(exam => {
             const userAnswer = userAnswersMap[exam.number];
@@ -195,11 +193,8 @@ export default class ExamComponent extends LightningElement {
     async confirmSubmit() {
         this.isSubmitted = true;
         this.showModal = false;
-        console.log("noOfFreeEnd::::" + this.noOfFreeEnd);
-        console.log("totalNoOfQuestion::::" + this.totalNoOfQuestion);
         const perQuestionMarks = this.fullMarks / this.totalNoOfQuestion;
         const totalFreeEndMarks = perQuestionMarks * this.noOfFreeEnd;
-        console.log("totalFreeEndMarks::::" + totalFreeEndMarks);
         if (this.editedFinalMarks > totalFreeEndMarks) {
             const errorMessage = 'Total Free End Question for this examination is ' + totalFreeEndMarks;
             this.showToast('Error', errorMessage, 'error');
@@ -246,6 +241,17 @@ export default class ExamComponent extends LightningElement {
             variant: variant,
         });
         this.dispatchEvent(event);
+    }
+
+    handlePrint() {
+        document.body.classList.add('printing');
+
+        setTimeout(() => {
+            window.print();
+            setTimeout(() => {
+                document.body.classList.remove('printing');
+            }, 1000);
+        }, 100);
     }
 
 }

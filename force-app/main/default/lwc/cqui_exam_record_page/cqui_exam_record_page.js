@@ -98,6 +98,8 @@ export default class Cqui_exam_record_page extends LightningElement {
     get numberedExams() {
         return this.exams;
     }
+
+    
 }
 
 // Function to clean HTML strings (optional)

@@ -95,7 +95,7 @@
                 <template for:each={exam.questionOptions} for:item="option">
                   <div key={option.value} class={option.optionClass}>
                     <template if:false={isSubmitted}>
-                      <input type="radio" name={exam.number} value={option.value} data-id={exam.Id}
+                      <input type="radio" name={exam.number} value={option.value} data-id={exam.Id} checked={option.isSelected}
                         data-number={exam.number} onchange={handleOptionChange} />
                       <label for="question-{exam.number}-{option.value}"> {option.value}</label>
                     </template>
@@ -121,7 +121,7 @@
                 <template for:each={exam.questionOptions} for:item="option">
                   <div key={option.value} class={option.optionClass}>
                     <template if:false={isSubmitted}>
-                      <input type="checkbox" name={exam.number} value={option.value} data-id={exam.Id}
+                      <input type="checkbox" name={exam.number} value={option.value} data-id={exam.Id} checked={option.isSelected}
                         data-number={exam.number} onchange={handleOptionChange} />
                       <label for="question-{exam.number}-{option.value}"> {option.value}</label>
                     </template>
