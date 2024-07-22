@@ -2,7 +2,8 @@ public with sharing class SQX_candidateResponseController {
     @AuraEnabled(cacheable=true)
     public static List<ExamWrapper> getExamData() {
         List<SQX_Candidate_Response__c> candidateResponses = [
-            SELECT Id, SQX_Exam__r.SQX_Assign_To__r.Name, SQX_Exam__r.SQX_Set_Name_Display__c, SQX_Exam__r.SQX_Obtained_Marks__c,SQX_Pass_Status__c ,SQX_Admin_Approved__c
+            SELECT Id, SQX_Exam__r.SQX_Assign_To__r.Name, SQX_Exam__r.SQX_Set_Name_Display__c, 
+            SQX_Exam__r.SQX_Obtained_Marks__c,SQX_Pass_Status__c ,SQX_Admin_Approved__c
             FROM SQX_Candidate_Response__c
         ];
         

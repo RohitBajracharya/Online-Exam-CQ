@@ -4,19 +4,15 @@ public with sharing class SQX_examController {
     public static List<Map<String, Object>> getAssignedQuestions(Id examId) {
         List<Map<String, Object>> exams = new List<Map<String, Object>>();
         Id currentUserId = UserInfo.getUserId();
-        
-        // Get today's date
         Date today = Date.today();
        // Query to fetch question set IDs assigned to the user
-       system.debug('todayyyyyyyyyyyyyy--------------------------------------------------'+ today);
-       
         List<SQX_Exam__c> examRecords = [
             SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c,SQX_Date__c,	SQX_Status__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId And Id=:examId
         ];
         System.debug('examRecords:::::::'+examRecords);
-        List<SQX_Exam__C> filterExam= new List<SQX_Exam__C>(); 
+        List<SQX_Exam__C> filterExam= new List<SQX_Exam__C>();  
         System.debug('today:::: '+today);
         for (SQX_Exam__c exam : examRecords) {
             System.debug('exam.SQX_Date__c.date()::::: '+exam.SQX_Date__c.date());
@@ -26,8 +22,6 @@ public with sharing class SQX_examController {
             }
         }
         System.debug('filterExam:::: '+filterExam);
-        
-
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
