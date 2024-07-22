@@ -16,11 +16,9 @@ export default class IntroBox extends LightningElement {
     async connectedCallback() {
         try {
             const isAnotherExamSchduled = await isAnotherExamScheduled();
-            console.log("isAnotherExamScheduled::: " + JSON.stringify(isAnotherExamSchduled));
             if (!isAnotherExamSchduled) {
                 const examId = await getExamId();
                 this.examination = examId;
-                console.log("examId getting:: " + JSON.stringify(examId));
                 try {
                     if (examId) {
                         const answerSubmitted = await isAnswerSubmitted({ examId: examId });
@@ -48,11 +46,9 @@ export default class IntroBox extends LightningElement {
                 const examId = await getNewExamId();
                 this.examination = examId;
 
-                console.log("examId getting new:: " + JSON.stringify(examId));
                 try {
                     if (examId) {
                         const answerSubmitted = await isAnswerSubmitted({ examId: examId });
-                        console.log("answerSubmitted::: " + JSON.stringify(answerSubmitted));
                         if (answerSubmitted) {
                             this.examFinished = true;
                             this.isExamStarted = true;

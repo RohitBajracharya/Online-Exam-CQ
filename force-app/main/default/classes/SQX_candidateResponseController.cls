@@ -1,4 +1,6 @@
 public with sharing class SQX_candidateResponseController {
+
+    // retrieve data related to candidate response and saves in wrapper classes
     @AuraEnabled(cacheable=true)
     public static List<ExamWrapper> getExamData() {
         List<SQX_Candidate_Response__c> candidateResponses = [

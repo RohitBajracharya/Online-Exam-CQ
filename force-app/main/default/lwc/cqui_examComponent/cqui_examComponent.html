@@ -23,6 +23,7 @@
     </div>
     <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
   </div>
+  <!-- Modal for displaying if candidate doesnt have permission to see obtained marks -->
   <div if:false={doDisplayResult}>
     <div if:true={showModal} role="dialog" aria-modal="true" aria-labelledby="modal-heading-01"
       class="slds-modal slds-fade-in-open">
@@ -44,7 +45,7 @@
   </div>
 
   <!--clock component -->
-  <c-cqui_clock if:false={examFinished} ontimeup={handleSubmit} onresettimer={handleResetTimer}
+  <c-cqui_clock exam-id={examId} if:false={examFinished} ontimeup={handleSubmit} onresettimer={handleResetTimer}
     minutes={remainingTime}></c-cqui_clock>
 
   <!--exam component-->
@@ -60,57 +61,81 @@
             <p class="slds-text-heading_small"><b>Pass Marks:</b> {passMarks}</p>
           </div>
         </div>
-        <template for:each={numberedExams} for:item="exam">
-          <div key={exam.Id} class="slds-box slds-m-around_medium">
-            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
 
-            <!-- Single Choice Questions -->
-            <template if:true={exam.isMCQ}>
-              <p><strong>Options:</strong></p>
-              <template for:each={exam.questionOptions} for:item="option">
-                <div key={option.value} class={option.optionClass}>
-                  <template if:false={isSubmitted}>
-                    <input type="radio" name={exam.number} value={option.value} data-id={exam.Id}
-                      data-number={exam.number} onchange={handleOptionChange} />
-                    <label for="question-{exam.number}-{option.value}"> {option.value}</label>
-                  </template>
-                  <template if:true={isSubmitted}>
-                    <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value} </p>
-                  </template>
-                </div>
-              </template>
-            </template>
-
-            <!-- Multiple Choice Questions -->
-            <template if:true={exam.isMultiple_Select_MCQ}>
-              <p><strong>Options:</strong></p>
-              <template for:each={exam.questionOptions} for:item="option">
-                <div key={option.value} class={option.optionClass}>
-                  <template if:false={isSubmitted}>
-                    <input type="checkbox" name={exam.number} value={option.value} data-id={exam.Id}
-                      data-number={exam.number} onchange={handleOptionChange} />
-                    <label for="question-{exam.number}-{option.value}"> {option.value}</label>
-                  </template>
-                  <template if:true={isSubmitted}>
-                    <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value} </p>
-                  </template>
-                </div>
-              </template>
-            </template>
-
-            <!-- Free End Questions -->
+        <!-- Free End Questions -->
+        <template if:true={freeEndQuestion}>
+          <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Free-End"</b></p>
+          <template for:each={numberedExams} for:item="exam">
             <template if:true={exam.isFreeEnd}>
-              <template if:false={isSubmitted}>
-                <lightning-textarea name="freeEndAnswer" label="Answer" data-id={exam.Id} data-number={exam.number}
-                  value={exam.userAnswer} onchange={handleAnswerChange}>
-                </lightning-textarea>
-              </template>
-              <template if:true={isSubmitted}>
-                <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
-              </template>
+              <div key={exam.Id} class="slds-box slds-m-around_medium">
+                <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
+
+
+                <template if:false={isSubmitted}>
+                  <lightning-textarea name="freeEndAnswer" label="Answer" data-id={exam.Id} data-number={exam.number}
+                    value={exam.userAnswer} onchange={handleAnswerChange}>
+                  </lightning-textarea>
+                </template>
+                <template if:true={isSubmitted}>
+                  <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
+                </template>
+              </div>
             </template>
-          </div>
+          </template>
         </template>
+
+        <!-- Single Choice Questions -->
+        <template if:true={mcqQuestion}>
+          <p class="slds-text-align_center slds-text-heading_medium"><b>Group "MCQ"</b></p>
+          <template for:each={numberedExams} for:item="exam">
+            <template if:true={exam.isMCQ}>
+              <div key={exam.Id} class="slds-box slds-m-around_medium">
+                <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
+                <p><strong>Options:</strong></p>
+                <template for:each={exam.questionOptions} for:item="option">
+                  <div key={option.value} class={option.optionClass}>
+                    <template if:false={isSubmitted}>
+                      <input type="radio" name={exam.number} value={option.value} data-id={exam.Id} checked={option.isSelected}
+                        data-number={exam.number} onchange={handleOptionChange} />
+                      <label for="question-{exam.number}-{option.value}"> {option.value}</label>
+                    </template>
+                    <template if:true={isSubmitted}>
+                      <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value} </p>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </template>
+
+        </template>
+
+        <!-- Multiple Choice Questions -->
+        <template if:true={multipleMcqQuestion}>
+          <p class="slds-text-align_center slds-text-heading_medium"><b>Group "Multiple Select MCQ"</b></p>
+          <template for:each={numberedExams} for:item="exam">
+            <template if:true={exam.isMultiple_Select_MCQ}>
+              <div key={exam.Id} class="slds-box slds-m-around_medium">
+                <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}</p>
+                <p><strong>Options:</strong></p>
+                <template for:each={exam.questionOptions} for:item="option">
+                  <div key={option.value} class={option.optionClass}>
+                    <template if:false={isSubmitted}>
+                      <input type="checkbox" name={exam.number} value={option.value} data-id={exam.Id} checked={option.isSelected}
+                        data-number={exam.number} onchange={handleOptionChange} />
+                      <label for="question-{exam.number}-{option.value}"> {option.value}</label>
+                    </template>
+                    <template if:true={isSubmitted}>
+                      <p class={option.optionClass} style="font-size: larger;"> {option.label}: {option.value} </p>
+                    </template>
+                  </div>
+                </template>
+              </div>
+            </template>
+          </template>
+        </template>
+
+
       </template>
 
       <template if:true={error}>

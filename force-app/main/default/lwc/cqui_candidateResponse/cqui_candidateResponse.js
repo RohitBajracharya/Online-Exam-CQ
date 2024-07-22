@@ -1,13 +1,14 @@
-import { LightningElement, wire, track } from 'lwc';
-import { NavigationMixin } from 'lightning/navigation';
 import getExamData from '@salesforce/apex/SQX_candidateResponseController.getExamData';
+import { NavigationMixin } from 'lightning/navigation';
+import { LightningElement, track, wire } from 'lwc';
+
 
 const columns = [
     { label: 'Assign To', fieldName: 'assignTo', type: 'text' },
     { label: 'Set', fieldName: 'examSet', type: 'text' },
-    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number'},
-    { label: 'Admin Approval', fieldName: 'adminApproved', type: 'picklist'},
-    { label: 'Status', fieldName:'status', type:'picklist'},
+    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number' },
+    { label: 'Admin Approval', fieldName: 'adminApproved', type: 'text' },
+    { label: 'Status', fieldName: 'status', type: 'text', cellAttributes: { class: { fieldName: 'statusClass' } } },
     {
         label: 'Actions', fieldName: 'actions',
         type: 'button',
@@ -26,13 +27,11 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     @track columns = columns;
     @track draftValues = [];
     wiredExamData;
+    // fullMarksMap = new Map();
 
     @wire(getExamData)
     wiredExams(result) {
-        console.log('result: ' + JSON.stringify(result.data));
-        this.wiredExamData = result;
         if (result.data) {
-            console.log('vvvvvvvvvv'+JSON.stringify(result.data));
             this.data = result.data.map(row => {
                 return {
                     ...row,
@@ -46,6 +45,27 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         }
     }
 
+    
+
+    // getter to show color of passStatus text color
+    get dataWithStatusClass() {
+        return this.data.map(row => {
+            let statusClass;
+            if (row.status === 'Pass') {
+                statusClass = 'slds-text-color_success';
+            } else if (row.status === 'Fail') {
+                statusClass = 'slds-text-color_error';
+            }
+            return { ...row, statusClass };
+        });
+    }
+
+    // Getter to return data with dynamically computed statusClass
+    get transformedData() {
+        return this.dataWithStatusClass;
+    }
+
+    // gets called when users cicks 'View Details' button
     handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
@@ -58,8 +78,8 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         }
     }
 
+    // method that navigate the user to particular candidate response result page
     handleViewDetails(row) {
-        console.log('View details for:', row);
         this[NavigationMixin.Navigate]({
             type: 'standard__recordPage',
             attributes: {
