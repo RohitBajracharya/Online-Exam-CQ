@@ -8,24 +8,19 @@ public with sharing class SQX_examController {
         // Get today's date
         Date today = Date.today();
        // Query to fetch question set IDs assigned to the user
-       system.debug('todayyyyyyyyyyyyyy--------------------------------------------------'+ today);
        
         List<SQX_Exam__c> examRecords = [
             SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c,SQX_Date__c,	SQX_Status__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId And Id=:examId
         ];
-        System.debug('examRecords:::::::'+examRecords);
         List<SQX_Exam__C> filterExam= new List<SQX_Exam__C>(); 
-        System.debug('today:::: '+today);
         for (SQX_Exam__c exam : examRecords) {
-            System.debug('exam.SQX_Date__c.date()::::: '+exam.SQX_Date__c.date());
             if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
                filterExam.add(exam);
                break;
             }
         }
-        System.debug('filterExam:::: '+filterExam);
         
 
         Set<Id> setIds = new Set<Id>();
@@ -40,7 +35,6 @@ public with sharing class SQX_examController {
             examId=exam.Id;
         }
         
-        System.debug('setId:::::::: '+setIds);
         // Query to fetch questions related to the assigned question sets
         List<SQX_Question_Set__c> questionSetRecords = [
             SELECT Id, Name, SQX_Set__c, SQX_Set__r.SQX_Name__c, SQX_Question__c,
@@ -49,7 +43,6 @@ public with sharing class SQX_examController {
             FROM SQX_Question_Set__c
             WHERE SQX_Set__c IN :setIds
         ];
-        System.debug('questionSetRecords:::'+questionSetRecords);
  
         for (SQX_Question_Set__c questionSet : questionSetRecords) {
             if (questionSet.SQX_Question__r != null) {
@@ -129,7 +122,6 @@ public with sharing class SQX_examController {
             Id currentUserId = UserInfo.getUserId();
             // Query to fetch question set IDs assigned to the user
             SQX_Exam__c exam=[Select SQX_Obtained_Marks__c,SQX_Status__c from SQX_Exam__c  WHERE SQX_Assign_To__c = :currentUserId and Id=:examId];
-            System.debug('Exam saved::::::'+exam);
             exam.SQX_Obtained_Marks__c=obtainedMarks;
             exam.SQX_Status__c='Completed';
             update exam;
@@ -140,7 +132,6 @@ public with sharing class SQX_examController {
     
     @AuraEnabled
     public static Boolean isAnswerSubmitted(Id examId) {
-            System.debug('examId::: '+examId);
             Id currentUserId = UserInfo.getUserId();
             // Query to check if candidate response exists for the specified exam
             Integer responseCount = [
@@ -149,11 +140,8 @@ public with sharing class SQX_examController {
                 WHERE SQX_Exam__c = :examId
                 AND OwnerId = :currentUserId
             ];
-            System.debug('responseCOunt:: '+responseCount);
             List<SQX_Exam__c> exam=[Select Id from SQX_Exam__c where SQX_Status__c='Completed' and Id=:examId and SQX_Assign_To__c=:currentUserId];
-            system.debug('exam::: '+exam);
             Boolean result=responseCount>0 && exam.size()>0;
-            system.debug('result::: '+result);
             return responseCount>0 && exam.size()>0;
        
     }
@@ -197,7 +185,6 @@ public with sharing class SQX_examController {
             where SQX_Assign_To__c = :currentUserId 
             ORDER BY LastModifiedDate DESC
         ];
-        System.debug('examRecords in iD:::'+examRecords);
         // Filter the records to only include those where the date part of SQX_Date__c matches today's date
         for (SQX_Exam__c exam : examRecords) {
             if (exam.SQX_Date__c.date() == today) {
@@ -222,19 +209,13 @@ public with sharing class SQX_examController {
             from SQX_Exam__c 
             where SQX_Assign_To__c = :currentUserId 
         ];
-        System.debug('examRecords in iD:::'+examRecords);
         // Filter the records to only include those where the date part of SQX_Date__c matches today's date
         for (SQX_Exam__c exam : examRecords) {
-            System.debug('today:::: '+today);
-            system.debug('exam.SQX_Date__c.date():::: '+exam.SQX_Date__c.date());
-            system.debug('SQX_Status__c:::'+exam.SQX_Status__c);
             if (exam.SQX_Date__c.date() == today && exam.SQX_Status__c=='Scheduled') {
-                System.debug('inside');
                 examId = exam.Id;
                 
             }
         }
-        system.debug('examId::: '+examId);
 
         return examId;
     }
@@ -273,17 +254,12 @@ public with sharing class SQX_examController {
             WHERE SQX_Assign_To__c = :currentUserId and
             SQX_Status__c='Scheduled'
         ];
-        System.debug('examRecords:::::::'+examRecords);
-        System.debug('today:::: '+today);
         for (SQX_Exam__c exam : examRecords) {
-            System.debug('exam.SQX_Date__c.date()::::: '+exam.SQX_Date__c.date());
             if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
-                System.debug('exam.SQX_Date__c.date() == today:: '+exam.SQX_Date__c.date());
                anotherExam=true;
                break;
             }
         }
-        system.debug('anotherExam::: '+anotherExam);
         return anotherExam;
 
    }
@@ -299,7 +275,6 @@ public with sharing class SQX_examController {
             examId=ex.Id;
             break;
         }
-        system.debug('exam:: '+exam);
         return examId;
    }
 }

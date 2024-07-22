@@ -11,13 +11,11 @@ public with sharing class SQX_RetrieveExamController {
             SELECT SQX_Exam__c FROM SQX_Candidate_Response__c
             WHERE Id= :recordId
         ];
-        System.debug('response;;;;;;;;'+response);
         List<SQX_Exam__c> examRecords = [
             SELECT Id, SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Obtained_Marks__c
             FROM SQX_Exam__c
             WHERE Id = : response.SQX_Exam__c
         ];
-        System.debug('examRecords;;;;;;;;'+examRecords);
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
@@ -79,7 +77,6 @@ public with sharing class SQX_RetrieveExamController {
                 FROM SQX_Candidate_Response__c
                 WHERE Id=:recordId
             ];
-            system.debug('candidatte:: '+responses);
             List<String> formattedResponses = new List<String>();
             for (SQX_Candidate_Response__c response : responses) {
                 formattedResponses.add(response.SQX_Candidate_Answer__c);
@@ -110,7 +107,6 @@ public with sharing class SQX_RetrieveExamController {
     @AuraEnabled
     public static String updateCandidateResponseApproval(Id responseId, Decimal finalObtainedMarks, Decimal passMarks) {
         try {
-            System.debug('finalObtainedMarks:: '+finalObtainedMarks);
             SQX_Candidate_Response__c response = [SELECT Id, SQX_Admin_Approved__c, SQX_Pass_Status__c FROM SQX_Candidate_Response__c WHERE Id = :responseId LIMIT 1];
             
             // Update the admin approval status to Approved
@@ -143,7 +139,25 @@ public with sharing class SQX_RetrieveExamController {
                 break;
             }
         }        
-        System.debug('hasPermission:: '+hasPermission);     
         return hasPermission;                              
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static User getCandidateInfo(Id recordId){
+        SQX_Candidate_Response__c response=[Select SQX_Exam__c from SQX_Candidate_Response__c where Id=:recordId];
+        SQX_Exam__c exam=[Select SQX_Assign_To__c from SQX_Exam__c where Id=:response.SQX_Exam__c];
+        User candidateInfo=[Select Id,Name,Email from User where Id=:exam.SQX_Assign_To__c];
+        System.debug('candidateInfo:: '+candidateInfo);
+        return candidateInfo;
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Boolean isAdminApproved(Id recordId){
+        SQX_Candidate_Response__c exam=[Select SQX_Admin_Approved__c from SQX_Candidate_Response__c where Id=:recordId];
+        if(exam.SQX_Admin_Approved__c=='Approved'){
+            return true;
+        }else{
+            return false;
+        }
     }
 }

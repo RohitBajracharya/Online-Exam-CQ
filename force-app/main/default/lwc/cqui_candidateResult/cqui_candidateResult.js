@@ -1,6 +1,8 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_RetrieveExamController.getAssignedQuestions';
+import getCandidateInfo from '@salesforce/apex/SQX_RetrieveExamController.getCandidateInfo';
 import getCandidateResponse from '@salesforce/apex/SQX_RetrieveExamController.getCandidateResponse';
 import getObtainMarksEditPermission from '@salesforce/apex/SQX_RetrieveExamController.getObtainMarksEditPermission';
+import isAdminApproved from '@salesforce/apex/SQX_RetrieveExamController.isAdminApproved';
 import updateCandidateResponseApproval from '@salesforce/apex/SQX_RetrieveExamController.updateCandidateResponseApproval';
 import updateExamObjectApex from '@salesforce/apex/SQX_RetrieveExamController.updateExamObjectApex';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -34,6 +36,9 @@ export default class ExamComponent extends LightningElement {
     mcqQuestion;
     multipleMcqQuestion;
 
+    userFullName;
+    userEmail;
+    adminApproved;
     async connectedCallback() {
         // checks whether user have permission to give final marks to candidate
         getObtainMarksEditPermission()
@@ -53,6 +58,14 @@ export default class ExamComponent extends LightningElement {
                 console.error("Error in connectedCallback:: " + JSON.stringify(error));
                 this.error = error;
             });
+
+        isAdminApproved({ recordId: this.recordId }).then(res => {
+            console.log("adminApproved:: " + JSON.parse(res));
+            this.adminApproved = JSON.parse(res);
+            console.log(typeof this.adminApproved);
+        }).catch(error => {
+            console.error("error:: " + JSON.stringify(res));
+        })
     }
 
 
@@ -61,6 +74,10 @@ export default class ExamComponent extends LightningElement {
     async loadExamData() {
         try {
             // retrieves assigned question to candidate
+            const candidateInfo = await getCandidateInfo({ recordId: this.recordId });
+            this.userFullName = candidateInfo.Name;
+            this.userEmail = candidateInfo.Email;
+
             const result = await getAssignedQuestions({ recordId: this.recordId });
             this.setName = result[0].Set_Name;
             this.fullMarks = result[0].Full_Marks;
@@ -175,12 +192,14 @@ export default class ExamComponent extends LightningElement {
     }
 
     get showFinalMarksButton() {
-        return this.noOfFreeEnd > 0 && this.hasObtainedMarksPermission;
+        return this.noOfFreeEnd > 0 && this.hasObtainedMarksPermission && this.adminApproved == false;
     }
 
     get numberedExams() {
         return this.exams;
     }
+
+
 
     handleFinalMarksChange(event) {
         this.editedFinalMarks = parseFloat(event.target.value);
@@ -234,6 +253,7 @@ export default class ExamComponent extends LightningElement {
 
 
     }
+
     showToast(title, message, variant) {
         const event = new ShowToastEvent({
             title: title,
@@ -244,14 +264,8 @@ export default class ExamComponent extends LightningElement {
     }
 
     handlePrint() {
-        document.body.classList.add('printing');
+        window.print();
 
-        setTimeout(() => {
-            window.print();
-            setTimeout(() => {
-                document.body.classList.remove('printing');
-            }, 1000);
-        }, 100);
     }
 
 }

@@ -1,13 +1,19 @@
 <template>
+    
     <lightning-card>
         <div class="slds-m-around_medium no-print slds-text-align_right">
-            <lightning-button label="Print" icon-name="utility:print" onclick={handlePrint}>
+            <lightning-button class="print-btn" label="Print" icon-name="utility:print" onclick={handlePrint}>
             </lightning-button>
         </div>
 
         <div class="printable-content">
             <template if:true={exams}>
-                <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-p-around_medium">
+                <div class="slds-grid slds-wrap slds-grid_vertical-align-center slds-p-around_large">
+                    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                        <p class="slds-text-heading_small slds-m-right_medium"><b>Name:
+                            </b> {userFullName}</p>
+                        <p class="slds-text-heading_small"><b>Email: </b>{userEmail}</p>
+                    </div>
                     <div class="slds-col slds-size_1-of-1 slds-text-align_center">
                         <p class="slds-text-heading_large"><b>Set: '{setName}'</b></p>
                     </div>
@@ -23,7 +29,7 @@
                     <template for:each={numberedExams} for:item="exam">
                         <template if:true={exam.isFreeEnd}>
                             <div key={exam.Id} class="slds-box slds-m-around_medium">
-                                <p style="font-size: larger;"><strong>Question {exam.number}:</strong>
+                                <p style="font-size: larger;"><strong>Question {exam.number}: </strong>
                                     {exam.Question_Title}</p>
                                 <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
                             </div>
@@ -37,7 +43,7 @@
                     <template for:each={numberedExams} for:item="exam">
                         <template if:true={exam.isMCQ}>
                             <div key={exam.Id} class="slds-box slds-m-around_medium">
-                                <p style="font-size: larger;"><strong>Question {exam.number}:</strong>
+                                <p style="font-size: larger;"><strong>Question {exam.number}: </strong>
                                     {exam.Question_Title}</p>
                                 <p><strong>Options:</strong></p>
                                 <template for:each={exam.questionOptions} for:item="option">
@@ -57,7 +63,7 @@
                     <template for:each={numberedExams} for:item="exam">
                         <template if:true={exam.isMultiple_Select_MCQ}>
                             <div key={exam.Id} class="slds-box slds-m-around_medium">
-                                <p style="font-size: larger;"><strong>Question {exam.number}:</strong>
+                                <p style="font-size: larger;"><strong>Question {exam.number}: </strong>
                                     {exam.Question_Title}</p>
                                 <p><strong>Options:</strong></p>
                                 <template for:each={exam.questionOptions} for:item="option">
