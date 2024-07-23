@@ -1,7 +1,20 @@
 <template>
+    <div class="slds-col slds-size_1-of-4 slds-p-around_none">
+        <lightning-input
+            class="cq-search"
+            style="margin-bottom: 16px;"
+            type="search"
+            placeholder="Search for Candidates"
+            value={searchTerm}
+            onchange={handleSearchTermChange}>
+        </lightning-input>
+    </div>
+
+    
+    <div class="lds-col slds-p-around_none">
     <lightning-datatable
         key-field="id"
-        data={transformedData}
+        data={filteredData}
         columns={columns}
         draft-values={draftValues}
         onsort={handleSort}
@@ -9,4 +22,5 @@
         hide-checkbox-column="true"
         show-row-number-column>
     </lightning-datatable>
+    </div>
 </template>
