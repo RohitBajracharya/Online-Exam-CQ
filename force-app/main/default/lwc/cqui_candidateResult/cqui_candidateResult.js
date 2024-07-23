@@ -60,9 +60,7 @@ export default class ExamComponent extends LightningElement {
             });
 
         isAdminApproved({ recordId: this.recordId }).then(res => {
-            console.log("adminApproved:: " + JSON.parse(res));
             this.adminApproved = JSON.parse(res);
-            console.log(typeof this.adminApproved);
         }).catch(error => {
             console.error("error:: " + JSON.stringify(res));
         })
@@ -103,6 +101,7 @@ export default class ExamComponent extends LightningElement {
                         number: idx + 1
                     };
                 });
+                console.log("Exams::: " + JSON.stringify(this.exams));
                 this.examId = result[0].Id;
                 this.error = undefined;
                 await this.groupingQuestion();
@@ -130,6 +129,10 @@ export default class ExamComponent extends LightningElement {
         this.freeEndQuestion = this.freeEndQues.length > 0 ? true : false
         this.mcqQuestion = this.mcqQues.length > 0 ? true : false
         this.multipleMcqQuestion = this.multipleMcqQues.length > 0 ? true : false
+
+        this.totalFreeEndMarks = await this.freeEndQues.reduce((total, question) => {
+            return total + parseFloat(question.Marks_Carried);
+        }, 0);
 
     }
     async loadCandidateResponse() {
@@ -212,10 +215,14 @@ export default class ExamComponent extends LightningElement {
     async confirmSubmit() {
         this.isSubmitted = true;
         this.showModal = false;
-        const perQuestionMarks = this.fullMarks / this.totalNoOfQuestion;
-        const totalFreeEndMarks = perQuestionMarks * this.noOfFreeEnd;
-        if (this.editedFinalMarks > totalFreeEndMarks) {
-            const errorMessage = 'Total Free End Question for this examination is ' + totalFreeEndMarks;
+
+
+        if (this.editedFinalMarks < 0) {
+            this.showToast('Error', 'Marks cannot be negative', 'error');
+            return;
+        }
+        if (this.editedFinalMarks > this.totalFreeEndMarks) {
+            const errorMessage = 'Total Free End Question for this examination is ' + this.totalFreeEndMarks;
             this.showToast('Error', errorMessage, 'error');
             return;
         }
@@ -266,6 +273,10 @@ export default class ExamComponent extends LightningElement {
     handlePrint() {
         window.print();
 
+    }
+
+    get inputLabel() {
+        return 'Enter Marks for Free End Questions out of ' + this.totalFreeEndMarks;
     }
 
 }

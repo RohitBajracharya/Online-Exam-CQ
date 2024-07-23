@@ -20,7 +20,9 @@
                     <template if:true={exam.isFreeEnd}>
                         <div key={exam.Id} class="slds-box slds-m-around_medium">
                             <!-- Question Title -->
-                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
+                            <p style="font-size: larger;"><span class="slds-grid"><strong>Question
+                                        {exam.number}: </strong>
+                                    {exam.Question_Title}<span class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
                             </p>
                             <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
                         </div>
@@ -35,7 +37,9 @@
                     <template if:true={exam.isMCQ}>
                         <div key={exam.Id} class="slds-box slds-m-around_medium">
                             <!-- Question Title -->
-                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
+                            <p style="font-size: larger;"><span class="slds-grid"><strong>Question
+                                        {exam.number}: </strong>
+                                    {exam.Question_Title}<span class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
                             </p>
                             <p><strong>Options:</strong></p>
                             <template for:each={exam.questionOptions} for:item="option">
@@ -56,7 +60,9 @@
                     <template if:true={exam.isMultiple_Select_MCQ}>
                         <div key={exam.Id} class="slds-box slds-m-around_medium">
                             <!-- Question Title -->
-                            <p style="font-size: larger;"><strong>Question {exam.number}:</strong> {exam.Question_Title}
+                            <p style="font-size: larger;"><span class="slds-grid"><strong>Question
+                                        {exam.number}: </strong>
+                                    {exam.Question_Title}<span class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
                             </p>
                             <p><strong>Options:</strong></p>
                             <template for:each={exam.questionOptions} for:item="option">
