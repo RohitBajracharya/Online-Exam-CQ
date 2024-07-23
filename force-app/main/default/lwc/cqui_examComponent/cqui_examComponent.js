@@ -1,6 +1,5 @@
 import getAssignedQuestions from '@salesforce/apex/SQX_examController.getAssignedQuestions';
 import getCandidateResponse from '@salesforce/apex/SQX_examController.getCandidateResponse';
-import getFullMarks from '@salesforce/apex/SQX_examController.getFullMarks';
 import getOngoingExamId from '@salesforce/apex/SQX_examController.getOngoingExamId';
 import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmitted';
 import saveCandidateResponse from '@salesforce/apex/SQX_examController.saveCandidateResponse';
@@ -270,30 +269,28 @@ export default class ExamComponent extends LightningElement {
     async calculateMarks() {
         this.obtainedMarks = 0.0;
         try {
-            const totalMarks = await getFullMarks({ examId: this.examId });
-            const totalQuestions = this.exams.length;
-            const marksPerQuestion = totalMarks / totalQuestions;
-
+            // Iterate through userAnswers to calculate the total marks based on the SQX_Marks_Carried__c for each question
             this.userAnswers.forEach(userAnswer => {
                 const exam = this.exams.find(ex => ex.QuestionId === userAnswer.questionId);
                 if (exam) {
+                    const marksPerQuestion = parseFloat(exam.Marks_Carried) || 0;
                     if (exam.isMCQ) {
                         if (userAnswer.answer === exam.correctAnswer[0]) {
-                            this.obtainedMarks += marksPerQuestion;
+                            this.obtainedMarks = Math.ceil(this.obtainedMarks + marksPerQuestion);
                         }
                     } else if (exam.isMultiple_Select_MCQ) {
                         const correctAnswers = exam.correctAnswer.length;
                         const userCorrectAnswers = userAnswer.answer.split(', ').filter(answer => exam.correctAnswer.includes(answer)).length;
-
                         const partialMarks = (userCorrectAnswers / correctAnswers) * marksPerQuestion;
-                        this.obtainedMarks += partialMarks;
+                        this.obtainedMarks = Math.ceil(this.obtainedMarks + partialMarks);
                     }
                 }
             });
         } catch (error) {
-            console.error("Error while fetching total marks:: " + JSON.stringify(error));
+            console.error("Error while calculating marks:: " + JSON.stringify(error));
         }
     }
+
 
     updateAnswerStyles() {
         const userAnswersMap = this.userAnswers.reduce((map, userAnswer) => {

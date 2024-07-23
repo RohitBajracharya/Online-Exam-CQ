@@ -56,6 +56,8 @@ export default class CquiQuestionSet extends LightningElement {
         }
     }
 
+
+
     handleSearchTermChange(event) {
         this.searchTerm = event.target.value.toLowerCase().trim();
         this.page = 1; // Reset to first page on new search
@@ -140,6 +142,7 @@ export default class CquiQuestionSet extends LightningElement {
 
     handleSetNameChange(event) {
         this.setName = event.target.value;
+        
     }
 
     handlePageChange(event) {
