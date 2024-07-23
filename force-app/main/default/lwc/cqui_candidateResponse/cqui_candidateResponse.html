@@ -1,11 +1,9 @@
 <template>
     <lightning-datatable
         key-field="id"
-        data={data}
+        data={transformedData}
         columns={columns}
         draft-values={draftValues}
-        onsave={handleSave}
-        oncellchange={handleCellChange}
         onsort={handleSort}
         onrowaction={handleRowAction}
         hide-checkbox-column="true"

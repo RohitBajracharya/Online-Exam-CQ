@@ -21,7 +21,7 @@
 }
 .clock{
     position: fixed;
-    top: 21%;
+    top: 12%;
     width: 115%;
     z-index: 99;
     height: 10%;

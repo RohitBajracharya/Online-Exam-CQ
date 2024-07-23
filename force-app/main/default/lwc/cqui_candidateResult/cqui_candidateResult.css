@@ -14,3 +14,13 @@
 .unattempted-correct-answer {
     color: rgb(43, 0, 255);
 }
+
+/* Styles for print preview */
+/* body.printing .printable-content {
+    visibility: visible;
+    position: static;
+}
+body.printing .no-print, body.printing .slds-card {
+    display: none !important;
+}
+ */

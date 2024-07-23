@@ -4,14 +4,12 @@ public with sharing class SQX_examRecordController {
         List<Map<String, Object>> exams = new List<Map<String, Object>>();
         Id currentUserId = UserInfo.getUserId();
         Id examId;
-        system.debug('recordId:: '+recordId);
        // Query to fetch question set IDs assigned to the user
         List<SQX_Exam__c> examRecords = [
             SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c
             FROM SQX_Exam__c
             WHERE Id=:recordId
         ];
-        System.debug('examRecords:::::::'+examRecords);
  
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
@@ -31,7 +29,6 @@ public with sharing class SQX_examRecordController {
             FROM SQX_Question_Set__c
             WHERE SQX_Set__c IN :setIds
         ];
-        System.debug('questionSetRecords:::'+questionSetRecords);
  
         for (SQX_Question_Set__c questionSet : questionSetRecords) {
             if (questionSet.SQX_Question__r != null) {
@@ -65,7 +62,6 @@ public with sharing class SQX_examRecordController {
                 exams.add(questionMap);
             }
         }
-        System.debug('exams::: '+exams);
         return exams;
     }
 

@@ -1,25 +1,28 @@
 public with sharing class SQX_examController {
+    
     @AuraEnabled(cacheable=true)
-    public static List<Map<String, Object>> getAssignedQuestions() {
+    public static List<Map<String, Object>> getAssignedQuestions(Id examId) {
         List<Map<String, Object>> exams = new List<Map<String, Object>>();
         Id currentUserId = UserInfo.getUserId();
-        Id examId;
+        
         // Get today's date
         Date today = Date.today();
        // Query to fetch question set IDs assigned to the user
-       system.debug('todayyyyyyyyyyyyyy--------------------------------------------------'+ today);
+       
         List<SQX_Exam__c> examRecords = [
             SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c,SQX_Date__c,	SQX_Status__c
             FROM SQX_Exam__c
-            WHERE SQX_Assign_To__c = :currentUserId
+            WHERE SQX_Assign_To__c = :currentUserId And Id=:examId
         ];
         List<SQX_Exam__C> filterExam= new List<SQX_Exam__C>(); 
         for (SQX_Exam__c exam : examRecords) {
             if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
                filterExam.add(exam);
+               break;
             }
         }
-        System.debug('examRecords:::::::'+examRecords);
+        
+
         Set<Id> setIds = new Set<Id>();
         Map<Id, Decimal> setFullMarksMap = new Map<Id, Decimal>();
         Map<Id, Decimal> setPassMarksMap = new Map<Id, Decimal>();
@@ -31,6 +34,7 @@ public with sharing class SQX_examController {
             setDisplayResultMap.put(exam.SQX_Set__c, exam.SQX_Display_Result__c);
             examId=exam.Id;
         }
+        
         // Query to fetch questions related to the assigned question sets
         List<SQX_Question_Set__c> questionSetRecords = [
             SELECT Id, Name, SQX_Set__c, SQX_Set__r.SQX_Name__c, SQX_Question__c,
@@ -39,7 +43,6 @@ public with sharing class SQX_examController {
             FROM SQX_Question_Set__c
             WHERE SQX_Set__c IN :setIds
         ];
-        System.debug('questionSetRecords:::'+questionSetRecords);
  
         for (SQX_Question_Set__c questionSet : questionSetRecords) {
             if (questionSet.SQX_Question__r != null) {
@@ -75,14 +78,14 @@ public with sharing class SQX_examController {
     }
 
     @AuraEnabled(cacheable=true)
-    public static String getExamDuration() {
+    public static String getExamDuration(Id examId) {
         Date today = Date.today();
         Id currentUserId = UserInfo.getUserId();
         List<SQX_Exam__c> examRecord = [
             SELECT SQX_Duration__c,SQX_Date__c
             FROM SQX_Exam__c 
             WHERE SQX_Assign_To__c = :currentUserId 
-            
+            and Id=:examId
         ];
         String filteredDuration = '';
     
@@ -96,24 +99,29 @@ public with sharing class SQX_examController {
     }
     
     @AuraEnabled
-    public static void saveCandidateResponse(List<Map<String, Object>> userAnswers, String examId) {
+    public static void saveCandidateResponse(List<Map<String, Object>> userAnswers, String examId,Decimal noOfFreeEndQuestion,String passStatus) {
         try {
             SQX_Candidate_Response__c response = new SQX_Candidate_Response__c();
             response.SQX_Exam__c = examId;
             response.SQX_Candidate_Answer__c = JSON.serialize(userAnswers);
+            if(noOfFreeEndQuestion==0){
+                response.SQX_Admin_Approved__c='Approved';
+                response.SQX_Pass_Status__c=passStatus;
+            }
             
             insert response;
         } catch (Exception e) {
             throw new AuraHandledException('Error saving candidate response: ' + e.getMessage());
         }
     }
+    
 
     @AuraEnabled
-    public static void saveObtainedMarks(Decimal obtainedMarks){
+    public static void saveObtainedMarks(Decimal obtainedMarks,Id examId){
         try {
             Id currentUserId = UserInfo.getUserId();
             // Query to fetch question set IDs assigned to the user
-            SQX_Exam__c exam=[Select SQX_Obtained_Marks__c,SQX_Status__c from SQX_Exam__c  WHERE SQX_Assign_To__c = :currentUserId];
+            SQX_Exam__c exam=[Select SQX_Obtained_Marks__c,SQX_Status__c from SQX_Exam__c  WHERE SQX_Assign_To__c = :currentUserId and Id=:examId];
             exam.SQX_Obtained_Marks__c=obtainedMarks;
             exam.SQX_Status__c='Completed';
             update exam;
@@ -124,7 +132,6 @@ public with sharing class SQX_examController {
     
     @AuraEnabled
     public static Boolean isAnswerSubmitted(Id examId) {
-        
             Id currentUserId = UserInfo.getUserId();
             // Query to check if candidate response exists for the specified exam
             Integer responseCount = [
@@ -134,6 +141,7 @@ public with sharing class SQX_examController {
                 AND OwnerId = :currentUserId
             ];
             List<SQX_Exam__c> exam=[Select Id from SQX_Exam__c where SQX_Status__c='Completed' and Id=:examId and SQX_Assign_To__c=:currentUserId];
+            Boolean result=responseCount>0 && exam.size()>0;
             return responseCount>0 && exam.size()>0;
        
     }
@@ -164,15 +172,56 @@ public with sharing class SQX_examController {
     }
 
     @AuraEnabled(cacheable=true)
-   public static Id getExamId(){
+    public static Id getExamId() {
         Id examId;
         Id currentUserId = UserInfo.getUserId();
-        List<SQX_Exam__c> examRecord=[select Id from SQX_Exam__c where SQX_Assign_To__c=:currentUserId];
-        for(SQX_Exam__c exam:examRecord){
-            examId=exam.Id;
+        Date today = Date.today();
+        DateTime current=Datetime.now();
+
+        // Query for the exam records matching the user and status criteria
+        List<SQX_Exam__c> examRecords = [
+            select Id, SQX_Date__c,SQX_Assign_To__c,SQX_Status__c
+            from SQX_Exam__c 
+            where SQX_Assign_To__c = :currentUserId 
+            ORDER BY LastModifiedDate DESC
+        ];
+        // Filter the records to only include those where the date part of SQX_Date__c matches today's date
+        for (SQX_Exam__c exam : examRecords) {
+            if (exam.SQX_Date__c.date() == today) {
+                examId = exam.Id;
+                break; // Stop after finding the first matching record
+            }
         }
+
         return examId;
-   }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static Id getNewExamId() {
+        Id examId;
+        Id currentUserId = UserInfo.getUserId();
+        Date today = Date.today();
+        DateTime current=Datetime.now();
+
+        // Query for the exam records matching the user and status criteria
+        List<SQX_Exam__c> examRecords = [
+            select Id, SQX_Date__c,SQX_Assign_To__c,SQX_Status__c
+            from SQX_Exam__c 
+            where SQX_Assign_To__c = :currentUserId 
+        ];
+        // Filter the records to only include those where the date part of SQX_Date__c matches today's date
+        for (SQX_Exam__c exam : examRecords) {
+            if (exam.SQX_Date__c.date() == today && exam.SQX_Status__c=='Scheduled') {
+                examId = exam.Id;
+                
+            }
+        }
+
+        return examId;
+    }
+
+
+
    
    @AuraEnabled(cacheable=true)
    public static Decimal getFullMarks(Id examId){
@@ -191,6 +240,42 @@ public with sharing class SQX_examController {
     SQX_Exam__c examRecord=[Select Id,SQX_Status__c from SQX_Exam__c where SQX_Assign_To__c=:currentUserId and Id=:examId];
     examRecord.SQX_Status__c='Ongoing';
     update examRecord;
+   }
+
+   @AuraEnabled
+   public static Boolean isAnotherExamScheduled(){
+        Date today = Date.today();
+        Id currentUserId = UserInfo.getUserId();
+
+        Boolean anotherExam=false;
+        List<SQX_Exam__c> examRecords = [
+            SELECT Id,SQX_Date__c,SQX_Status__c
+            FROM SQX_Exam__c
+            WHERE SQX_Assign_To__c = :currentUserId and
+            SQX_Status__c='Scheduled'
+        ];
+        for (SQX_Exam__c exam : examRecords) {
+            if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
+               anotherExam=true;
+               break;
+            }
+        }
+        return anotherExam;
+
+   }
+   
+   @AuraEnabled
+   public static Id getOngoingExamId(){
+        Id currentUserId = UserInfo.getUserId();
+      
+        Id examId;
+        List<SQX_Exam__c> exam=[Select Id from SQX_Exam__c where SQX_Status__c='Ongoing' and SQX_Assign_To__c=:currentUserId];
+
+        for(SQX_Exam__c ex:exam){
+            examId=ex.Id;
+            break;
+        }
+        return examId;
    }
 }
 
