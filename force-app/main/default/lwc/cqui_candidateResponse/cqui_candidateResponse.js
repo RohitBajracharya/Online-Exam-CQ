@@ -4,8 +4,8 @@ import { LightningElement, track, wire } from 'lwc';
 
 
 const columns = [
-    { label: 'Assign To', fieldName: 'assignTo', type: 'text' },
-    { label: 'Set', fieldName: 'examSet', type: 'text' },
+    { label: 'Assign To', fieldName: 'assignTo', type: 'text' , sortable: true},
+    { label: 'Set', fieldName: 'examSet', type: 'text'},
     { label: "Date",fieldName: "recordDate",type: "date",
         typeAttributes:{
             year: "numeric",
@@ -14,11 +14,12 @@ const columns = [
             hour: "2-digit",
             minute: "2-digit",
             timeZone: 'Asia/Kathmandu'
-        }
+        },
+        sortable: true
     },
-    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number',cellAttributes: { alignment: 'left' } },
-    { label: 'Admin Approval', fieldName: 'adminApproved', type: 'text' },
-    { label: 'Status', fieldName: 'status', type: 'text', cellAttributes: { class: { fieldName: 'statusClass' } } },
+    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number',cellAttributes: { alignment: 'left' }},
+    { label: 'Admin Approval', fieldName: 'adminApproved', type: 'text', sortable: true },
+    { label: 'Status', fieldName: 'status', type: 'text', cellAttributes: { class: { fieldName: 'statusClass' } }},
     {
         label: 'Actions', fieldName: 'actions',
         type: 'button',
@@ -38,6 +39,8 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     @track draftValues = [];
     @track searchTerm = '';
     @track filteredData = [];
+    @track sortedBy;
+    @track sortDirection='asc';
 
  
 
@@ -126,15 +129,46 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
                 hour: '2-digit', 
                 minute: '2-digit', 
                 hour12: true 
-            }).toLowerCase(): '';
+            }).toLowerCase() : '';
+            const recordDateWithoutSpaces = recordDate.replace(/\s+/g, '');
             return assignTo.includes(searchTerm) ||
                    examSet.includes(searchTerm) ||
                    adminApproved.includes(searchTerm) ||
                    status.includes(searchTerm) ||
-                   recordDate.includes(searchTerm);
+                   recordDate.includes(searchTerm) ||
+                   recordDateWithoutSpaces.includes(searchTerm);
         });
         console.log('Filtered Data:', this.filteredData); // Debugging line
     
     }
 
+    handleSort(event) {
+        const { fieldName: sortedBy, sortDirection } = event.detail;
+        const cloneData = [...this.data];
+
+        cloneData.sort(this.sortBy(sortedBy, sortDirection));
+        
+        this.data = cloneData;
+        this.sortedBy = sortedBy;
+        this.sortedDirection = sortDirection;
+        this.updateDisplayedCandidates();
+    }
+
+    sortBy(field, reverse, primer) {
+        const key = primer
+            ? function(x) {
+                return primer(x[field]);
+            }
+            : function(x) {
+                return x[field];
+            };
+
+        reverse = reverse === 'asc' ? 1 : -1;
+
+        return function(a, b) {
+            a = key(a);
+            b = key(b);
+            return reverse * ((a > b) - (b > a));
+        };
+    }
 }
