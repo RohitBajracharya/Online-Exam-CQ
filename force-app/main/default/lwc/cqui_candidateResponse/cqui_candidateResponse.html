@@ -10,19 +10,36 @@
         </lightning-input>
     </div>
 
-    
     <div class="lds-col slds-p-around_none">
-    <lightning-datatable
-        key-field="id"
-        data={filteredData}
-        columns={columns}
-        draft-values={draftValues}
-        onsort={handleSort}
-        sorted-by={sortedBy}
-        sorted-direction={sortedDirection}
-        onrowaction={handleRowAction}
-        hide-checkbox-column="true"
-        show-row-number-column>
-    </lightning-datatable>
+        <lightning-datatable
+            key-field="id"
+            data={paginatedData}
+            columns={columns}
+            draft-values={draftValues}
+            onsort={handleSort}
+            sorted-by={sortedBy}
+            sorted-direction={sortedDirection}
+            onrowaction={handleRowAction}
+            hide-checkbox-column="true"
+            show-row-number-column>
+        </lightning-datatable>
+    </div>
+
+    <div class="slds-col slds-m-top_medium">
+        <lightning-button-group>
+            <lightning-button
+                label="Previous"
+                onclick={handlePreviousPage}
+                disabled={isFirstPage}
+                class="slds-button">
+            </lightning-button>
+            <lightning-button
+                label="Next"
+                icon-position="right"
+                onclick={handleNextPage}
+                disabled={isLastPage}
+                class="slds-button">
+            </lightning-button>
+        </lightning-button-group>
     </div>
 </template>

@@ -1,0 +1,9 @@
+.slds-button-group {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.slds-button_neutral {
+    margin: 0 0px;
+}
