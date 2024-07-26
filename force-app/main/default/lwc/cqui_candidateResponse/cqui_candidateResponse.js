@@ -5,7 +5,7 @@ import { LightningElement, track, wire } from 'lwc';
 
 const columns = [
     { label: 'Assign To', fieldName: 'assignTo', type: 'text' , sortable: true},
-    { label: 'Set', fieldName: 'examSet', type: 'text'},
+    { label: 'Set', fieldName: 'examSet', type: 'text', sortable: true},
     { label: "Date",fieldName: "recordDate",type: "date",
         typeAttributes:{
             year: "numeric",
@@ -41,6 +41,7 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     @track filteredData = [];
     @track sortedBy;
     @track sortDirection='asc';
+    
 
  
 
@@ -118,7 +119,6 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         console.log('Data Before Filtering:', this.data); // Debugging line
         this.filteredData = this.data.filter(record => {
             const assignTo = record.assignTo ? record.assignTo.toLowerCase() : '';
-            const examSet = record.examSet ? record.examSet.toLowerCase() : '';
             const adminApproved = record.adminApproved ? record.adminApproved.toLowerCase() : '';
             const status = record.status ? record.status.toLowerCase() : '';
             const recordDate = record.recordDate ? new Date(record.recordDate).toLocaleString('en-US', { 
@@ -132,7 +132,6 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
             }).toLowerCase() : '';
             const recordDateWithoutSpaces = recordDate.replace(/\s+/g, '');
             return assignTo.includes(searchTerm) ||
-                   examSet.includes(searchTerm) ||
                    adminApproved.includes(searchTerm) ||
                    status.includes(searchTerm) ||
                    recordDate.includes(searchTerm) ||

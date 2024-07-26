@@ -179,11 +179,13 @@ export default class ExamComponent extends LightningElement {
                     };
                 } else if (exam.isMultiple_Select_MCQ) {
                     let updatedOptions = exam.selectedOptions;
+
                     if (isChecked) {
                         updatedOptions.push(option);
                     } else {
                         updatedOptions = updatedOptions.filter(item => item !== option);
                     }
+
                     return {
                         ...exam,
                         selectedOptions: updatedOptions,
@@ -269,7 +271,7 @@ export default class ExamComponent extends LightningElement {
     async calculateMarks() {
         this.obtainedMarks = 0.0;
         try {
-            // Iterate through userAnswers to calculate the total marks based on the SQX_Marks_Carried__c for each question
+            
             this.userAnswers.forEach(userAnswer => {
                 const exam = this.exams.find(ex => ex.QuestionId === userAnswer.questionId);
                 if (exam) {
@@ -279,10 +281,15 @@ export default class ExamComponent extends LightningElement {
                             this.obtainedMarks = Math.ceil(this.obtainedMarks + marksPerQuestion);
                         }
                     } else if (exam.isMultiple_Select_MCQ) {
-                        const correctAnswers = exam.correctAnswer.length;
-                        const userCorrectAnswers = userAnswer.answer.split(', ').filter(answer => exam.correctAnswer.includes(answer)).length;
-                        const partialMarks = (userCorrectAnswers / correctAnswers) * marksPerQuestion;
-                        this.obtainedMarks = Math.ceil(this.obtainedMarks + partialMarks);
+                        if (userAnswer.answer.split(', ').length > exam.correctAnswer.length) {
+                            // If more options are selected than the correct number of answers, set marks to zero
+                            this.obtainedMarks += 0;
+                        } else {
+                            const correctAnswers = exam.correctAnswer.length;
+                            const userCorrectAnswers = userAnswer.answer.split(', ').filter(answer => exam.correctAnswer.includes(answer)).length;
+                            const partialMarks = (userCorrectAnswers / correctAnswers) * marksPerQuestion;
+                            this.obtainedMarks = Math.ceil(this.obtainedMarks + partialMarks);
+                        }
                     }
                 }
             });
@@ -290,6 +297,7 @@ export default class ExamComponent extends LightningElement {
             console.error("Error while calculating marks:: " + JSON.stringify(error));
         }
     }
+    
 
 
     updateAnswerStyles() {
