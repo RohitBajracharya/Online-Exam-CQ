@@ -24,7 +24,7 @@ public with sharing class SQX_examRecordController {
         // Query to fetch questions related to the assigned question sets
         List<SQX_Question_Set__c> questionSetRecords = [
             SELECT Id, Name, SQX_Set__c, SQX_Set__r.SQX_Name__c, SQX_Question__c,
-                   SQX_Question__r.SQX_Title__c, SQX_Question__r.SQX_Type__c,
+                   SQX_Question__r.SQX_Title__c, SQX_Question__r.SQX_Type__c,SQX_Question__r.SQX_Marks_Carried__c,
                    SQX_Question__r.SQX_Options__c,SQX_Question__r.SQX_Correct_Answer__c
             FROM SQX_Question_Set__c
             WHERE SQX_Set__c IN :setIds
@@ -40,6 +40,7 @@ public with sharing class SQX_examRecordController {
                 questionMap.put('Question_Title', questionSet.SQX_Question__r.SQX_Title__c);
                 questionMap.put('Question_Type', questionSet.SQX_Question__r.SQX_Type__c);
                 questionMap.put('Correct_Answer',questionSet.SQX_Question__r.SQX_Correct_Answer__c);
+                questionMap.put('Marks_Carried',questionSet.SQX_Question__r.SQX_Marks_Carried__c);
                 questionMap.put('Full_Marks', examRecords[0].SQX_Full_Marks__c);
                 questionMap.put('Pass_Marks', examRecords[0].SQX_Pass_Marks__c);
  
