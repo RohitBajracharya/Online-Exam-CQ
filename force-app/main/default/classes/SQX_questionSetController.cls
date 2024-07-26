@@ -5,9 +5,6 @@ public with sharing class SQX_questionSetController {
         List <SQX_Set__c> setName= [SELECT Id, SQX_Name__c FROM SQX_Set__c]; 
         return setName;
     }
-    
-    
-
     @AuraEnabled(cacheable=true)
     public static List<Map<String, Object>> getQuestions() {
         List<Map<String, Object>> questions = new List<Map<String, Object>>();
@@ -24,6 +21,19 @@ public with sharing class SQX_questionSetController {
             questions.add(question);
         }
         return questions;
+    }
+    @AuraEnabled(cacheable=true)
+    public static List<Map<String, Object>> alreadyExistQuestions(String setName) {
+        List<Map<String, Object>> existingQuestions = new List<Map<String, Object>>();
+        
+        List<SQX_Question_Set__c> questionSetRecords = [SELECT SQX_Question__c FROM SQX_Question_Set__c WHERE SQX_Set__c = :setName WITH SECURITY_ENFORCED];
+        
+        for (SQX_Question_Set__c record : questionSetRecords) {
+            Map<String, Object> questionSet = new Map<String, Object>();
+            questionSet.put('SQX_Question__c', record.SQX_Question__c);
+            existingQuestions.add(questionSet);
+        }
+        return existingQuestions;
     }
 
      @AuraEnabled
