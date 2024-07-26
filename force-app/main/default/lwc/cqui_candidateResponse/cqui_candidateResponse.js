@@ -2,12 +2,11 @@ import getExamData from '@salesforce/apex/SQX_candidateResponseController.getExa
 import { NavigationMixin } from 'lightning/navigation';
 import { LightningElement, track, wire } from 'lwc';
 
-
 const columns = [
-    { label: 'Assign To', fieldName: 'assignTo', type: 'text' , sortable: true},
-    { label: 'Set', fieldName: 'examSet', type: 'text', sortable: true},
-    { label: "Date",fieldName: "recordDate",type: "date",
-        typeAttributes:{
+    { label: 'Assign To', fieldName: 'assignTo', type: 'text', sortable: true },
+    { label: 'Set', fieldName: 'examSet', type: 'text', sortable: true },
+    { label: "Date", fieldName: "recordDate", type: "date",
+        typeAttributes: {
             year: "numeric",
             month: "long",
             day: "2-digit",
@@ -17,9 +16,9 @@ const columns = [
         },
         sortable: true
     },
-    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number',cellAttributes: { alignment: 'left' }},
+    { label: 'Obtained Marks', fieldName: 'obtainedMarks', type: 'number', cellAttributes: { alignment: 'left' } },
     { label: 'Admin Approval', fieldName: 'adminApproved', type: 'text', sortable: true },
-    { label: 'Status', fieldName: 'status', type: 'text', cellAttributes: { class: { fieldName: 'statusClass' } }},
+    { label: 'Status', fieldName: 'status', type: 'text', cellAttributes: { class: { fieldName: 'statusClass' } } },
     {
         label: 'Actions', fieldName: 'actions',
         type: 'button',
@@ -39,13 +38,15 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
     @track draftValues = [];
     @track searchTerm = '';
     @track filteredData = [];
+    @track paginatedData = [];
     @track sortedBy;
-    @track sortDirection='asc';
-    
+    @track sortDirection = 'asc';
 
- 
+    @track pageSize = 10; // Number of records per page
+    @track currentPage = 1;
+    @track totalPages = 0;
 
-    // retrieves candidateResponse values and bind in data varaible
+    // retrieves candidateResponse values and bind in data variable
     @wire(getExamData)
     wiredExams(result) {
         if (result.data) {
@@ -55,7 +56,6 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
                     obtainedMarks: row.obtainedMarks,
                     adminApproved: row.adminApproved,
                     status: row.passStatus,
-                    // fullMarks: row.fullMarks
                 };
             });
             this.updateDisplayedCandidates();
@@ -63,8 +63,6 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
             console.error(result.error);
         }
     }
-
-    
 
     // getter to show color of passStatus text color
     get dataWithStatusClass() {
@@ -84,7 +82,7 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         return this.dataWithStatusClass;
     }
 
-    // gets called when users cicks 'View Details' button
+    // gets called when users clicks 'View Details' button
     handleRowAction(event) {
         const actionName = event.detail.action.name;
         const row = event.detail.row;
@@ -116,19 +114,18 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
 
     updateDisplayedCandidates() {
         const searchTerm = this.searchTerm.toLowerCase();
-        console.log('Data Before Filtering:', this.data); // Debugging line
         this.filteredData = this.data.filter(record => {
             const assignTo = record.assignTo ? record.assignTo.toLowerCase() : '';
             const adminApproved = record.adminApproved ? record.adminApproved.toLowerCase() : '';
             const status = record.status ? record.status.toLowerCase() : '';
-            const recordDate = record.recordDate ? new Date(record.recordDate).toLocaleString('en-US', { 
+            const recordDate = record.recordDate ? new Date(record.recordDate).toLocaleString('en-US', {
                 timeZone: 'Asia/Kathmandu',
-                month: 'long', 
-                day: 'numeric', 
-                year: 'numeric', 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                hour12: true 
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
             }).toLowerCase() : '';
             const recordDateWithoutSpaces = recordDate.replace(/\s+/g, '');
             return assignTo.includes(searchTerm) ||
@@ -137,8 +134,37 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
                    recordDate.includes(searchTerm) ||
                    recordDateWithoutSpaces.includes(searchTerm);
         });
-        console.log('Filtered Data:', this.filteredData); // Debugging line
-    
+
+        this.totalPages = Math.ceil(this.filteredData.length / this.pageSize);
+        this.updatePaginatedData();
+    }
+
+    updatePaginatedData() {
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        this.paginatedData = this.filteredData.slice(start, end);
+    }
+
+    handlePreviousPage() {
+        if (this.currentPage > 1) {
+            this.currentPage--;
+            this.updatePaginatedData();
+        }
+    }
+
+    handleNextPage() {
+        if (this.currentPage < this.totalPages) {
+            this.currentPage++;
+            this.updatePaginatedData();
+        }
+    }
+
+    get isFirstPage() {
+        return this.currentPage === 1;
+    }
+
+    get isLastPage() {
+        return this.currentPage === this.totalPages;
     }
 
     handleSort(event) {
@@ -146,7 +172,7 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
         const cloneData = [...this.data];
 
         cloneData.sort(this.sortBy(sortedBy, sortDirection));
-        
+
         this.data = cloneData;
         this.sortedBy = sortedBy;
         this.sortedDirection = sortDirection;
@@ -155,16 +181,16 @@ export default class CandidateResponse extends NavigationMixin(LightningElement)
 
     sortBy(field, reverse, primer) {
         const key = primer
-            ? function(x) {
+            ? function (x) {
                 return primer(x[field]);
             }
-            : function(x) {
+            : function (x) {
                 return x[field];
             };
 
         reverse = reverse === 'asc' ? 1 : -1;
 
-        return function(a, b) {
+        return function (a, b) {
             a = key(a);
             b = key(b);
             return reverse * ((a > b) - (b > a));
