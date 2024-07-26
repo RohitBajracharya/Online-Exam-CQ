@@ -1,5 +1,5 @@
 <template>
-
+    
     <lightning-card>
         <div class="slds-m-around_medium no-print slds-text-align_right">
             <lightning-button class="print-btn" label="Print" icon-name="utility:print" onclick={handlePrint}>
@@ -29,11 +29,11 @@
                     <template for:each={numberedExams} for:item="exam">
                         <template if:true={exam.isFreeEnd}>
                             <div key={exam.Id} class="slds-box slds-m-around_medium">
-                                <p style="font-size: larger;"><span class="slds-grid"><strong>Question
-                                            {exam.number}: </strong>
-                                        {exam.Question_Title}<span
-                                            class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
-                                </p>
+                                    <p style="font-size: larger;"><span class="slds-grid"><strong>Question
+                                        {exam.number}: </strong>
+                                    {exam.Question_Title}<span
+                                        class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
+                            </p>
                                 <p style="font-size: larger;"><b>Answer:</b> {exam.userAnswer}</p>
                             </div>
                         </template>
@@ -47,10 +47,10 @@
                         <template if:true={exam.isMCQ}>
                             <div key={exam.Id} class="slds-box slds-m-around_medium">
                                 <p style="font-size: larger;"><span class="slds-grid"><strong>Question
-                                            {exam.number}: </strong>
-                                        {exam.Question_Title}<span
-                                            class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
-                                </p>
+                                    {exam.number}: </strong>
+                                {exam.Question_Title}<span
+                                    class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
+                        </p>
                                 <p><strong>Options:</strong></p>
                                 <template for:each={exam.questionOptions} for:item="option">
                                     <div key={option.value} class={option.optionClass}>
@@ -70,10 +70,10 @@
                         <template if:true={exam.isMultiple_Select_MCQ}>
                             <div key={exam.Id} class="slds-box slds-m-around_medium">
                                 <p style="font-size: larger;"><span class="slds-grid"><strong>Question
-                                            {exam.number}: </strong>
-                                        {exam.Question_Title}<span
-                                            class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
-                                </p>
+                                    {exam.number}: </strong>
+                                {exam.Question_Title}<span
+                                    class="slds-col_bump-left slds-text-title_bold">({exam.Marks_Carried})</span></span>
+                        </p>
                                 <p><strong>Options:</strong></p>
                                 <template for:each={exam.questionOptions} for:item="option">
                                     <div key={option.value} class={option.optionClass}>
@@ -113,9 +113,32 @@
                     <div class="slds-modal__content slds-p-around_medium">
                         <p><strong>Full Marks:</strong> {fullMarks}</p>
                         <p><strong>Pass Marks:</strong> {passMarks}</p>
-                        <p><strong>Obtained Marks:</strong> {obtainedMarks}</p>
-                        <lightning-input type="number" label={inputLabel} value={editedFinalMarks}
-                            onchange={handleFinalMarksChange}></lightning-input>
+                        <p><strong>Obtained Markss:</strong> {obtainedMarks}</p>
+                        <template if:true={freeEndQuestion}>
+                            <template for:each={numberedExams} for:item="exam">
+                                <template if:true={exam.isFreeEnd}>
+                                    <div key={exam.QuestionId} class="slds-box slds-m-around_medium">
+                                        <p style="font-size: larger;"><span class="slds-grid"></strong>{exam.Question_Title}</span></p>
+                                        <lightning-input type="number" label="Marks" value={exam.marks} onchange={handleMarksChange} data-id={exam.QuestionId}  min="0">
+                                        </lightning-input>
+                                    </div>
+                                </template>
+                            </template>
+                        </template>
+                            
+                        <!-- <template if:true={freeEndQues}>
+                            <template for:each={freeEndQues} for:item="exam">
+                                <div key={exam.Id} class="slds-m-bottom_medium">
+                                    <p>{exam.Question_Title}</p>
+                                    
+                                    <lightning-input type="number" label="Marks" value={exam.marks} onchange={handleMarksChange} data-id={exam.Id} min="0">
+                                    
+                            </lightning-input>
+                                </div>    
+                            </template>
+                        </template> -->
+                        <!-- <lightning-input type="number" label="Enter Marks for Free End Questions"
+                            value={editedFinalMarks} onchange={handleFinalMarksChange}></lightning-input> -->
                     </div>
                     <footer class="slds-modal__footer">
                         <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>
