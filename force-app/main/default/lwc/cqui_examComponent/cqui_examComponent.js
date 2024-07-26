@@ -309,7 +309,6 @@ export default class ExamComponent extends LightningElement {
                         : userAnswer.split(', ').includes(option.label);
 
                     let optionClass = 'default-option';
-                    console.log("displaying ::::::: " + JSON.stringify(this.displayResult));
                     if (this.displayResult == "Show result after submission") {
                         if (isSelected) {
                             optionClass = isCorrect ? 'correct-answer' : 'incorrect-answer';
@@ -362,9 +361,7 @@ export default class ExamComponent extends LightningElement {
 
     get doDisplayResult() {
         if (this.displayResult == "Don't show result after submission") {
-        if (this.displayResult == "Don't show result after submission") {
             return false;
-        } else if (this.displayResult == "Show result after submission") {
         } else if (this.displayResult == "Show result after submission") {
             return true;
         }
