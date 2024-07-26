@@ -114,8 +114,17 @@
                         <p><strong>Full Marks:</strong> {fullMarks}</p>
                         <p><strong>Pass Marks:</strong> {passMarks}</p>
                         <p><strong>Obtained Marks:</strong> {obtainedMarks}</p>
-                        <lightning-input type="number" label={inputLabel} value={editedFinalMarks}
-                            onchange={handleFinalMarksChange}></lightning-input>
+                        <template if:true={freeEndQues}>
+                            <template for:each={freeEndQues} for:item="question">
+                                <div key={question.Id} class="slds-m-bottom_medium">
+                                    <p><strong>Question {question.number}: </strong>{question.Question_Title}</p>
+                                    <lightning-input type="number" label="Marks" value={question.marks} onchange={handleMarksChange} data-id={question.Id}>
+                            </lightning-input>
+                                </div>
+                            </template>
+                        </template>
+                        <!-- <lightning-input type="number" label="Enter Marks for Free End Questions"
+                            value={editedFinalMarks} onchange={handleFinalMarksChange}></lightning-input> -->
                     </div>
                     <footer class="slds-modal__footer">
                         <lightning-button variant="neutral" label="Cancel" onclick={closeModal}></lightning-button>

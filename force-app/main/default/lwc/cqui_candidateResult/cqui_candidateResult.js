@@ -15,7 +15,8 @@ export default class ExamComponent extends LightningElement {
     @track userAnswers = [];
     @track isSubmitted = false;
     @track showModal = false;
-    editedFinalMarks = 0;
+    @track freeEndMarks = [];
+    insertedMarks=[];
     obtainedMarks = 0;
     examId;
     setName = '';
@@ -60,7 +61,9 @@ export default class ExamComponent extends LightningElement {
             });
 
         isAdminApproved({ recordId: this.recordId }).then(res => {
+            console.log("adminApproved:: " + JSON.parse(res));
             this.adminApproved = JSON.parse(res);
+            console.log(typeof this.adminApproved);
         }).catch(error => {
             console.error("error:: " + JSON.stringify(res));
         })
@@ -101,7 +104,6 @@ export default class ExamComponent extends LightningElement {
                         number: idx + 1
                     };
                 });
-                console.log("Exams::: " + JSON.stringify(this.exams));
                 this.examId = result[0].Id;
                 this.error = undefined;
                 await this.groupingQuestion();
@@ -125,14 +127,10 @@ export default class ExamComponent extends LightningElement {
             ...exam,
             number: index + 1
         }));
-
+        console.log('exammm name'+JSON.stringify(this.exams));
         this.freeEndQuestion = this.freeEndQues.length > 0 ? true : false
         this.mcqQuestion = this.mcqQues.length > 0 ? true : false
         this.multipleMcqQuestion = this.multipleMcqQues.length > 0 ? true : false
-
-        this.totalFreeEndMarks = await this.freeEndQues.reduce((total, question) => {
-            return total + parseFloat(question.Marks_Carried);
-        }, 0);
 
     }
     async loadCandidateResponse() {
@@ -202,33 +200,72 @@ export default class ExamComponent extends LightningElement {
         return this.exams;
     }
 
+    
 
+    handleMarksChange(event) {
 
-    handleFinalMarksChange(event) {
-        this.editedFinalMarks = parseFloat(event.target.value);
+        const questionId = event.target.dataset.id;
+        const input = event.target.value;
+
+        console.log("input "+input);
+        const marks=input.length==0?0:parseFloat(input)
+
+        console.log("Questionn ID "+questionId);
+        console.log("Input Marks"+marks);
+        
+
+        if (isNaN(marks) || marks === null) {
+            marks = 0;
+        }
+
+        // Check if the marks already exist for the question ID and update accordingly
+        const index = this.insertedMarks.findIndex(item => item.id === questionId);
+
+        if (index > -1) {
+            // If it exists, replace the existing entry
+            this.insertedMarks[index] = { id: questionId, marks: marks};
+        } else {
+            console.log('wjdnaocd'+questionId);
+            // If it does not exist, add a new entry
+            this.insertedMarks.push({ id: questionId, marks: marks});
+            
+        }
+        console.log('Updated freeEndMarks:'+ JSON.stringify(this.insertedMarks));
+       
     }
 
     handleSubmit() {
         this.showModal = true;
     }
-    //calculate per question marks of free-end and saves final marking 
+    
     async confirmSubmit() {
         this.isSubmitted = true;
         this.showModal = false;
 
+     
+        this.totalFreeEndMarks=this.insertedMarks.reduce((total, item) => total + item.marks, 0);
+        console.log('totalFreeEndMarks Marks:'+this.totalFreeEndMarks);
 
-        if (this.editedFinalMarks < 0) {
-            this.showToast('Error', 'Marks cannot be negative', 'error');
-            return;
-        }
-        if (this.editedFinalMarks > this.totalFreeEndMarks) {
-            const errorMessage = 'Total Free End Question for this examination is ' + this.totalFreeEndMarks;
+        if (this.totalFreeEndMarks > this.fullMarks) {
+            const errorMessage = 'Total Free End Question marks exceed the maximum allowed.';
             this.showToast('Error', errorMessage, 'error');
+            this.isSubmitted = false;
             return;
         }
+       
         // Update Exam object
-        const finalObtainedMarks = parseFloat(this.obtainedMarks) + parseFloat(this.editedFinalMarks);
-        await updateExamObjectApex({ examId: this.examId, obtainedMarks: this.editedFinalMarks, responseId: this.recordId })
+        const finalObtainedMarks = this.obtainedMarks + this.totalFreeEndMarks;
+        console.log('Obtained Marks:', this.obtainedMarks);
+        console.log('Final Obtained Marks:', finalObtainedMarks);
+        if (finalObtainedMarks > this.fullMarks) {
+            const errorMessage = 'Total marks (obtained marks + free-end marks) exceed the full marks.';
+            this.showToast('Error', errorMessage, 'error');
+            this.isSubmitted = false;
+            return;
+        }
+        
+
+        await updateExamObjectApex({ examId: this.examId, obtainedMarks: finalObtainedMarks, responseId: this.recordId })
             .then(async result => {
                 if (result == 'success') {
                     await updateCandidateResponseApproval({ responseId: this.recordId, passMarks: this.passMarks, finalObtainedMarks: finalObtainedMarks })
@@ -258,7 +295,6 @@ export default class ExamComponent extends LightningElement {
 
             });
 
-
     }
 
     showToast(title, message, variant) {
@@ -273,10 +309,6 @@ export default class ExamComponent extends LightningElement {
     handlePrint() {
         window.print();
 
-    }
-
-    get inputLabel() {
-        return 'Enter Marks for Free End Questions out of ' + this.totalFreeEndMarks;
     }
 
 }
