@@ -1,6 +1,8 @@
 public with sharing class SQX_examController {
     
+    
     @AuraEnabled(cacheable=true)
+    public static List<Map<String, Object>> getAssignedQuestions(Id examId) {
     public static List<Map<String, Object>> getAssignedQuestions(Id examId) {
         List<Map<String, Object>> exams = new List<Map<String, Object>>();
         Id currentUserId = UserInfo.getUserId();
@@ -13,11 +15,16 @@ public with sharing class SQX_examController {
             SELECT Id,SQX_Set__c,SQX_Full_Marks__c,SQX_Pass_Marks__c,SQX_Display_Result__c,SQX_Date__c,	SQX_Status__c
             FROM SQX_Exam__c
             WHERE SQX_Assign_To__c = :currentUserId And Id=:examId
+            WHERE SQX_Assign_To__c = :currentUserId And Id=:examId
         ];
+        System.debug('examRecords:::::::'+examRecords);
         List<SQX_Exam__C> filterExam= new List<SQX_Exam__C>(); 
+        System.debug('today:::: '+today);
         for (SQX_Exam__c exam : examRecords) {
+            System.debug('exam.SQX_Date__c.date()::::: '+exam.SQX_Date__c.date());
             if (exam.SQX_Date__c != null && exam.SQX_Date__c.date() == today) {
                filterExam.add(exam);
+               break;
                break;
             }
         }
@@ -118,6 +125,7 @@ public with sharing class SQX_examController {
     
 
     @AuraEnabled
+    public static void saveObtainedMarks(Decimal obtainedMarks,Id examId){
     public static void saveObtainedMarks(Decimal obtainedMarks,Id examId){
         try {
             Id currentUserId = UserInfo.getUserId();

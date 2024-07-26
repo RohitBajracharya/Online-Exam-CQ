@@ -8,6 +8,7 @@ import updateExamObjectApex from '@salesforce/apex/SQX_RetrieveExamController.up
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 
 export default class ExamComponent extends LightningElement {
     @track exams = [''];
@@ -188,6 +189,7 @@ export default class ExamComponent extends LightningElement {
                 this.noOfFreeEnd++;
                 exam.userAnswer = userAnswer;
             }
+
 
             return exam;
         });

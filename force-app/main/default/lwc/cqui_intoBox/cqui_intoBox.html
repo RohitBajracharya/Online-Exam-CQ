@@ -3,6 +3,9 @@
     <!--Display when there is examination scheduled but not started-->
     <div if:true={showModal} role="dialog" aria-modal="true" aria-labelledby="modal-heading-01"
         class="slds-modal slds-fade-in-open">
+    <!--Display when there is examination scheduled but not started-->
+    <div if:true={showModal} role="dialog" aria-modal="true" aria-labelledby="modal-heading-01"
+        class="slds-modal slds-fade-in-open">
         <div class="slds-modal__container">
             <div class="slds-modal__header">
                 <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate" tabindex="-1">About Exam</h1>
@@ -12,14 +15,37 @@
                     submit once the allocated time elapses. However, if you complete your responses before the deadline,
                     you can manually submit them at any time. To commence the exam, kindly press the "Start Exam"
                     button. Best of luck!</p>
+                <p class="slds-m-top_x-small">Welcome to the exam session. Please note that the exam will automatically
+                    submit once the allocated time elapses. However, if you complete your responses before the deadline,
+                    you can manually submit them at any time. To commence the exam, kindly press the "Start Exam"
+                    button. Best of luck!</p>
             </div>
             <div class="slds-modal__footer">
+                <button class="slds-button slds-button_brand" onclick={startExam} aria-label="startExam">Start
+                    Exam</button>
                 <button class="slds-button slds-button_brand" onclick={startExam} aria-label="startExam">Start
                     Exam</button>
             </div>
         </div>
     </div>
     <div if:true={showModal} class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+
+    <!--Display when there is no examination scheduled-->
+
+    <div if:true={error}>
+        <div role="dialog" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+                <div class="slds-modal__header">
+                    <h1 id="modal-heading-02" class="slds-modal__title slds-hyphenate" tabindex="-1">About Exam</h1>
+                </div>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-2">
+                    <p class="slds-m-top_x-small slds-text-color_error slds-text-heading_medium">{error}</p>
+                </div>
+
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    </div>
 
     <!--Display when there is no examination scheduled-->
 

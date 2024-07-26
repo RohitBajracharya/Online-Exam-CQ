@@ -1,6 +1,8 @@
 import getExamId from '@salesforce/apex/SQX_examController.getExamId';
 import getNewExamId from '@salesforce/apex/SQX_examController.getNewExamId';
 import isAnotherExamScheduled from '@salesforce/apex/SQX_examController.isAnotherExamScheduled';
+import getNewExamId from '@salesforce/apex/SQX_examController.getNewExamId';
+import isAnotherExamScheduled from '@salesforce/apex/SQX_examController.isAnotherExamScheduled';
 import isAnswerSubmitted from '@salesforce/apex/SQX_examController.isAnswerSubmitted';
 import updateExamStatusToOngoing from '@salesforce/apex/SQX_examController.updateExamStatusToOngoing';
 import { LightningElement, track } from 'lwc';
@@ -10,6 +12,8 @@ export default class IntroBox extends LightningElement {
     isExamStarted = false;
     @track examFinished = false;
     startTimerOnLoad = false;
+    error;
+    examination;
     error;
     examination;
 
@@ -67,6 +71,11 @@ export default class IntroBox extends LightningElement {
                     }
                 } catch (error) {
                     console.error("Error fetching answerSubmitted::: " + JSON.stringify(error));
+
+                }
+            }
+
+
 
                 }
             }
