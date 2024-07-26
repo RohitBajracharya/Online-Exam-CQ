@@ -1,6 +1,7 @@
 import createQuestionSet from '@salesforce/apex/SQX_questionSetController.createQuestionSet';
 import getQuestions from '@salesforce/apex/SQX_questionSetController.getQuestions';
 import getSetPicklistValues from '@salesforce/apex/SQX_questionSetController.getSetPicklistValues';
+import alreadyExistQuestions from '@salesforce/apex/SQX_questionSetController.alreadyExistQuestions';
 import ANSWER_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Correct_Answer__c';
 import OPTIONS_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Options__c';
 import TITLE_FIELD from '@salesforce/schema/SQX_Question__c.SQX_Title__c';
@@ -15,7 +16,6 @@ const COLUMNS = [
     { label: 'Options', fieldName: OPTIONS_FIELD.fieldApiName },
 ];
 
-// removes html tags, convert &quot into double quotation   
 function cleanQuestionString(question) {
     const tempElement = document.createElement('div');
     tempElement.innerHTML = question;
@@ -29,6 +29,8 @@ export default class CquiQuestionSet extends LightningElement {
     @track allSelectedQuestionIds = [];
     @track setPicklistValues = [];
     @track questions = [];
+    @track originalQuestions = []; // Store the original questions list
+    @track questionCount = 0;
     selectedQuestionsByPage = {};
     setName = '';
     page = 1;
@@ -36,11 +38,12 @@ export default class CquiQuestionSet extends LightningElement {
     columns = COLUMNS;
     searchTerm = '';
     error;
+    @track isSetSelected = false; // Flag to manage question display
 
     @wire(getQuestions)
     wiredQuestions({ error, data }) {
         if (data) {
-            this.questions = data.map(record => {
+            this.originalQuestions = data.map(record => {
                 return {
                     Id: record.Id,
                     SQX_Title__c: cleanQuestionString(record.SQX_Title__c),
@@ -49,8 +52,11 @@ export default class CquiQuestionSet extends LightningElement {
                     SQX_Correct_Answer__c: record.SQX_Correct_Answer__c
                 };
             });
-            this.updateTotalPages();
-            this.updateDisplayedQuestions();
+            if (this.isSetSelected) { // Only set questions if a set is selected
+                this.questions = [...this.originalQuestions];
+                this.updateTotalPages();
+                this.updateDisplayedQuestions();
+            }
         } else if (error) {
             console.error('Error:', error);
         }
@@ -64,7 +70,7 @@ export default class CquiQuestionSet extends LightningElement {
         this.updateTotalPages();
         this.updateDisplayedQuestions();
     }
-
+    
     @wire(getSetPicklistValues)
     wiredSetPicklistValues({ error, data }) {
         if (data) {
@@ -114,7 +120,9 @@ export default class CquiQuestionSet extends LightningElement {
             questionIds: this.allSelectedQuestionIds
         }).then(() => {
             this.showToast('Success', 'Question Set Creation successful', 'success');
-            this.resetState();
+            this.isSetSelected = true; // Set flag to true after successful creation
+            this.retrieveNonExistQuestion(); // Re-fetch and update questions
+            location.reload();
         }).catch((error) => {
             var errorMessage = error.body.message;
             var customErrorMessage;
@@ -142,7 +150,17 @@ export default class CquiQuestionSet extends LightningElement {
 
     handleSetNameChange(event) {
         this.setName = event.target.value;
-        
+        this.isSetSelected = false; // Reset flag when set name changes
+        this.retrieveNonExistQuestion();
+    }
+    
+    async retrieveNonExistQuestion() {
+        const already = await alreadyExistQuestions({ setName: this.setName });
+        const alreadyIds = new Set(already.map(q => q.SQX_Question__c)); // Creates new set where only the ids are there from the Map (stored in key-value pairs)
+        this.questionCount = alreadyIds.size; // Get the count of unique IDs in the Set
+        this.questions = this.originalQuestions.filter(quest => !alreadyIds.has(quest.Id)); // Filter from the original questions list
+        this.updateTotalPages();
+        this.updateDisplayedQuestions();
     }
 
     handlePageChange(event) {
@@ -209,7 +227,10 @@ export default class CquiQuestionSet extends LightningElement {
         this.setName = '';
         this.searchTerm = '';
         this.page = 1;
-
+        this.isSetSelected = false; // Reset the flag for set selection
+        this.questions = [...this.originalQuestions]; // Reset to original questions list
+        this.updateTotalPages();
         this.updateDisplayedQuestions();
     }
 }
+
