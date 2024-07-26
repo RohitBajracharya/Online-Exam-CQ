@@ -93,9 +93,9 @@ public with sharing class SQX_RetrieveExamController {
     @AuraEnabled
     public static String updateExamObjectApex(Id examId, Decimal obtainedMarks) {
         SQX_Exam__c exam = [SELECT Id, SQX_Obtained_Marks__c,SQX_Full_Marks__c FROM SQX_Exam__c WHERE Id = :examId];
-        Decimal finalObtainedMarks=exam.SQX_Obtained_Marks__c+obtainedMarks;
-        if(finalObtainedMarks<exam.SQX_Full_Marks__c){
-            exam.SQX_Obtained_Marks__c = finalObtainedMarks;
+        
+        if(obtainedMarks<exam.SQX_Full_Marks__c){
+            exam.SQX_Obtained_Marks__c = obtainedMarks;
             update exam;
             return 'success';
         }else{
