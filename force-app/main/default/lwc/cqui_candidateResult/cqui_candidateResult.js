@@ -274,9 +274,9 @@ export default class ExamComponent extends LightningElement {
 
                                 this.showToast('Success', 'Candidate Response updated successfully', 'success');
 
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 1200);
+                                // setTimeout(() => {
+                                //     window.location.reload();
+                                // }, 1200);
                             } else {
                                 console.error('Validation Exception: ' + result);
                                 this.showToast('Error', result, 'error');
